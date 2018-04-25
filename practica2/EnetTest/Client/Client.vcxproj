@@ -54,14 +54,14 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/../enet-2.0/include;$(SolutionDir)/EnetWrapper;$(SolutionDir)/lib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/../enet-2.0/include;$(SolutionDir)/EnetWrapper;$(ProjectDir)/lib</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>openal/OpenAL32.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;enet.lib;enetwrapper.lib;wsock32.lib;Ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)/lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);$(ProjectDir)/lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
