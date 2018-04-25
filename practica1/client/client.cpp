@@ -75,16 +75,27 @@ int main(int argc, char *argv[])
 		{
 			numBytesSend = send(sockfd, buf, length - totalSend, 0);
 			totalSend += numBytesSend;
-		} while (totalSend < length);
+		} while (numBytesSend != -1 && totalSend < length);
+
+		if (numBytesSend == -1)
+		{
+			closesocket(sockfd);
+			printf("Server has been disconnected\n");
+			gets_s(buf, _countof(buf));
+			WSACleanup();
+			return 1;
+		}
 
 		//TO-DO open thread to receive messages from server
 		SOCKET* socket = new SOCKET(sockfd);
 		pthread_t receiveMessagesThread;
 		if (pthread_create(&receiveMessagesThread, NULL, receiveMessages, socket)) {
-
+			closesocket(sockfd);
+			closesocket(*socket);
+			delete socket;
 			fprintf(stderr, "Error creating thread\n");
+			WSACleanup();
 			return 1;
-
 		}
 
 
@@ -102,9 +113,11 @@ int main(int argc, char *argv[])
 				} while (numBytesSend != -1 && totalSend < length);
 
 				if (numBytesSend == -1) {
+					closesocket(sockfd);
 					printf("Server has been disconnected\n");
 					gets_s(buf, _countof(buf));
-					break;
+					WSACleanup();
+					return 1;
 				}
 			}
 		}

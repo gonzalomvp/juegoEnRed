@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
 			if (pthread_create(&receiveMessagesThread, NULL, receiveMessages, socket)) {
 
 				fprintf(stderr, "Error creating thread\n");
+				WSACleanup();
 				return 1;
 			}
 		}
