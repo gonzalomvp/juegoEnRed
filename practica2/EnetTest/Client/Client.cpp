@@ -1,5 +1,8 @@
 #include "common/stdafx.h"
+#include "Buffer.h"
 #include "ClientENet.h"
+#include "PacketENet.h"
+#include "Player.h"
 #include <Windows.h>
 
 using namespace ENet;
@@ -34,6 +37,16 @@ int Main(void)
 		CORE_RenderCenteredSprite(vmake(200, 200), vmake(32, 32), texture, 1.0f);
         std::vector<CPacketENet*>  incommingPackets;
         pClient->Service(incommingPackets, 0);
+		
+		for (size_t i = 0; i < incommingPackets.size(); ++i)
+		{
+			CPacketENet* packet = incommingPackets[i];
+			
+			CBuffer buffer(234217728);
+			buffer.Write(packet->GetData(), packet->GetDataLength());
+			Player player(vmake(0, 0));
+		}
+
         Sleep(100);
 
 		SYS_Show();

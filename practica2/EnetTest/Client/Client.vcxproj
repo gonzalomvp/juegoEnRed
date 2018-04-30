@@ -92,6 +92,7 @@
     <ClInclude Include="common\lodepng.h" />
     <ClInclude Include="common\stdafx.h" />
     <ClInclude Include="common\sys.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
