@@ -35,16 +35,14 @@ int Main(void)
     {
 		glClear(GL_COLOR_BUFFER_BIT);
 		CORE_RenderCenteredSprite(vmake(200, 200), vmake(32, 32), texture, 1.0f);
-        std::vector<CPacketENet*>  incommingPackets;
         pClient->Service(incommingPackets, 0);
 		
-		for (size_t i = 0; i < incommingPackets.size(); ++i)
+		for (auto packet : incommingPackets)
 		{
-			CPacketENet* packet = incommingPackets[i];
-			
-			CBuffer buffer(234217728);
-			buffer.Write(packet->GetData(), packet->GetDataLength());
-			Player player(vmake(0, 0));
+			if (packet->GetType() == EPacketType::DATA)
+			{
+				int i = 0;
+			}
 		}
 
         Sleep(100);
