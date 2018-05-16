@@ -35,7 +35,6 @@
     <ClInclude Include="common\stdafx.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="common">
