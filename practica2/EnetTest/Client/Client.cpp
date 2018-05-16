@@ -31,40 +31,51 @@ int Main(void)
 	std::vector<CPacketENet*>  incommingPackets;
 	pClient->Service(incommingPackets, 0);
 	Sleep(100);
-	pClient->SendData(pPeer, "pepe", 4, 0, false);
+	//pClient->SendData(pPeer, "pepe", 4, 0, false);
 	while (true)
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
-		
 		std::vector<CPacketENet*>  incommingPackets;
 		pClient->Service(incommingPackets, 0);
+		CBuffer buffer;
 
+		NetMessageStartMatch message;
+		message.numPlayers = 0;
 		for (size_t i = 0; i < incommingPackets.size(); ++i)
 		{
 			CPacketENet* packet = incommingPackets[i];
-			CBuffer buffer;
-			NetMessageType type = *reinterpret_cast<NetMessageType*>(packet->GetData());
-			switch (type)
-			{
-				case NETMSG_STARTMATCH:
-					buffer.Write(packet->GetData(), packet->GetDataLength());
-					buffer.GotoStart();
-					NetMessageStartMatch message;
-					message.deserialize(buffer);
-					int num = message.numPlayers;
-					
-					for (size_t i = 0; i < message.numPlayers; i++)
-					{
-						Player player = message.players[i];
-						CORE_RenderCenteredSprite(vmake(player.m_posX, player.m_posY), vmake(player.m_radius, player.m_radius), texture, 1.0f);
-					}
-					break;
+			
+			if (packet->GetType() == EPacketType::DATA) {
+				NetMessageType type = *reinterpret_cast<NetMessageType*>(packet->GetData());
+				switch (type)
+				{
+					case NETMSG_STARTMATCH:
+						buffer.Clear();
+						buffer.Write(packet->GetData(), packet->GetDataLength());
+						buffer.GotoStart();
+						message.deserialize(buffer);
+						break;
+				}
 			}
+			
 			
 		}
 
-		Sleep(100);
+		ivec2 sysMousePos = SYS_MousePos();
+		NetMessageMoveCommand msgMove;
+		msgMove.mouseX = sysMousePos.x;
+		msgMove.mouseY = sysMousePos.y;
+		buffer.Clear();
+		msgMove.serialize(buffer);
 
+		pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, false);
+
+
+		glClear(GL_COLOR_BUFFER_BIT);
+		for (size_t i = 0; i < message.numPlayers; i++)
+		{
+			Player player = message.players[i];
+			CORE_RenderCenteredSprite(vmake(player.m_posX, player.m_posY), vmake(player.m_radius, player.m_radius), texture, 1.0f);
+		}
 		SYS_Show();
 		SYS_Pump();
 		SYS_Sleep(17);

@@ -32,7 +32,33 @@ int _tmain(int argc, _TCHAR* argv[])
 			message.serialize(buffer);
 			//pServer->SendAll(&player, sizeof(player), 0, false);
 			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, false);
-			Sleep(100);
+			pServer->Service(incommingPackets, 0);
+
+			for (size_t i = 0; i < incommingPackets.size(); ++i)
+			{
+				CPacketENet* packet = incommingPackets[i];
+				if (packet->GetType() == EPacketType::DATA) {
+					NetMessageType type = *reinterpret_cast<NetMessageType*>(packet->GetData());
+					switch (type)
+					{
+						case NETMSG_MOVECOMMAND:
+							buffer.Clear();
+							buffer.Write(packet->GetData(), packet->GetDataLength());
+							buffer.GotoStart();
+							NetMessageMoveCommand msgMove;
+							msgMove.deserialize(buffer);
+							int dirX = msgMove.mouseX - players[0].m_posX;
+							int dirY = msgMove.mouseY - players[0].m_posY;
+							float length = sqrt(dirX * dirX + dirY * dirY);
+							players[0].m_posX += dirX / length;
+							players[0].m_posY += dirY / length;
+							break;
+					}
+				}
+			}
+
+
+			Sleep(17);
 		}
 	}
 	else

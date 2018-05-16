@@ -8,7 +8,7 @@ enum NetMessageType
 {
 	NETMSG_UNKNOWN,
 	NETMSG_STARTMATCH,
-	NETMSG_CHANGEPOS
+	NETMSG_MOVECOMMAND
 };
 
 struct NetMessage
@@ -26,4 +26,15 @@ struct NetMessageStartMatch : public NetMessage
 	NetMessageStartMatch() { Type = NETMSG_STARTMATCH; }
 	std::vector<Player> players;
 	int numPlayers;
+	int id;
+};
+
+struct NetMessageMoveCommand : public NetMessage
+{
+	virtual void serialize(CBuffer& buffer);
+	virtual void deserialize(CBuffer& buffer);
+
+	NetMessageMoveCommand() { Type = NETMSG_MOVECOMMAND; }
+	int mouseX;
+	int mouseY;
 };

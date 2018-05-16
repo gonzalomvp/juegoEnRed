@@ -14,6 +14,7 @@ void NetMessage::deserialize(CBuffer& buffer)
 void NetMessageStartMatch::serialize(CBuffer& buffer)
 {
 	NetMessage::serialize(buffer);
+	buffer.Write(&id, sizeof(id));
 	numPlayers = players.size();
 	buffer.Write(&numPlayers, sizeof(numPlayers));
 	for (size_t i = 0; i < numPlayers; i++)
@@ -26,6 +27,7 @@ void NetMessageStartMatch::serialize(CBuffer& buffer)
 void NetMessageStartMatch::deserialize(CBuffer& buffer)
 {
 	NetMessage::deserialize(buffer);
+	buffer.Read(&id, sizeof(id));
 	buffer.Read(&numPlayers, sizeof(numPlayers));
 	for (size_t i = 0; i < numPlayers; i++)
 	{
@@ -33,4 +35,18 @@ void NetMessageStartMatch::deserialize(CBuffer& buffer)
 		buffer.Read(&player, sizeof(Player));
 		players.push_back(player);
 	}
+}
+
+void NetMessageMoveCommand::serialize(CBuffer& buffer)
+{
+	NetMessage::serialize(buffer);
+	buffer.Write(&mouseX, sizeof(mouseX));
+	buffer.Write(&mouseY, sizeof(mouseY));
+}
+
+void NetMessageMoveCommand::deserialize(CBuffer& buffer)
+{
+	NetMessage::deserialize(buffer);
+	buffer.Read(&mouseX, sizeof(mouseX));
+	buffer.Read(&mouseY, sizeof(mouseY));
 }
