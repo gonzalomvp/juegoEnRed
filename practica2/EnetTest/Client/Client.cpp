@@ -32,6 +32,8 @@ int Main(void)
 	pClient->Service(incommingPackets, 0);
 	Sleep(100);
 	//pClient->SendData(pPeer, "pepe", 4, 0, false);
+
+	std::vector<Player> players;
 	while (true)
 	{
 		std::vector<CPacketENet*>  incommingPackets;
@@ -53,6 +55,7 @@ int Main(void)
 						buffer.Write(packet->GetData(), packet->GetDataLength());
 						buffer.GotoStart();
 						message.deserialize(buffer);
+						players = message.players;
 						break;
 				}
 			}
@@ -71,9 +74,10 @@ int Main(void)
 
 
 		glClear(GL_COLOR_BUFFER_BIT);
-		for (size_t i = 0; i < message.numPlayers; i++)
+	
+		for (size_t i = 0; i < players.size(); i++)
 		{
-			Player player = message.players[i];
+			Player player = players[i];
 			CORE_RenderCenteredSprite(vmake(player.m_posX, player.m_posY), vmake(player.m_radius, player.m_radius), texture, 1.0f);
 		}
 		SYS_Show();
