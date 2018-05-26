@@ -1,18 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server", "Server\Server.vcxproj", "{58688CD2-F774-4BCC-81FA-4E9BF4F02D77}"
 	ProjectSection(ProjectDependencies) = postProject
 		{39888074-6239-497A-8154-9E2022F26C22} = {39888074-6239-497A-8154-9E2022F26C22}
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166} = {51C54BBF-F076-4B37-8E3A-D2C573E91166}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "Client\Client.vcxproj", "{3D76AEDD-4086-4FCF-8ECD-97EEB7A14409}"
 	ProjectSection(ProjectDependencies) = postProject
 		{39888074-6239-497A-8154-9E2022F26C22} = {39888074-6239-497A-8154-9E2022F26C22}
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166} = {51C54BBF-F076-4B37-8E3A-D2C573E91166}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "enet", "..\enet-2.0\enet.vcxproj", "{75367C11-E3C2-439F-8F85-01D2A6735BD0}"
@@ -22,9 +20,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EnetWrapper", "EnetWrapper\
 		{75367C11-E3C2-439F-8F85-01D2A6735BD0} = {75367C11-E3C2-439F-8F85-01D2A6735BD0}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CommonData", "CommonData\CommonData.vcxproj", "{51C54BBF-F076-4B37-8E3A-D2C573E91166}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Common\Common.vcxitems", "{DC638D42-99B4-4204-B8A3-376D57A1071D}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Common\Common.vcxitems*{3d76aedd-4086-4fcf-8ecd-97eeb7a14409}*SharedItemsImports = 4
+		Common\Common.vcxitems*{58688cd2-f774-4bcc-81fa-4e9bf4f02d77}*SharedItemsImports = 4
+		Common\Common.vcxitems*{dc638d42-99b4-4204-b8a3-376d57a1071d}*SharedItemsImports = 9
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Debug|x64 = Debug|x64
@@ -56,14 +59,6 @@ Global
 		{39888074-6239-497A-8154-9E2022F26C22}.Release|Win32.ActiveCfg = Release|Win32
 		{39888074-6239-497A-8154-9E2022F26C22}.Release|Win32.Build.0 = Release|Win32
 		{39888074-6239-497A-8154-9E2022F26C22}.Release|x64.ActiveCfg = Release|Win32
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166}.Debug|Win32.ActiveCfg = Debug|Win32
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166}.Debug|Win32.Build.0 = Debug|Win32
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166}.Debug|x64.ActiveCfg = Debug|x64
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166}.Debug|x64.Build.0 = Debug|x64
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166}.Release|Win32.ActiveCfg = Release|Win32
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166}.Release|Win32.Build.0 = Release|Win32
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166}.Release|x64.ActiveCfg = Release|x64
-		{51C54BBF-F076-4B37-8E3A-D2C573E91166}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

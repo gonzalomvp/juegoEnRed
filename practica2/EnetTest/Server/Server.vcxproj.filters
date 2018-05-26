@@ -2,40 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Server.cpp" />
-    <ClCompile Include="common\core.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\font.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\lodepng.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\stdafx.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
+    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="common\core.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\font.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\lodepng.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\stdafx.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\sys.h">
-      <Filter>common</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="common">
-      <UniqueIdentifier>{ce4a98de-04d1-48cf-9a87-f03caf471ec6}</UniqueIdentifier>
-    </Filter>
+    <ClInclude Include="stdafx.h" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "core.h"
 
 bool LineLineIntersect(vec2 start1, //Line 1 start

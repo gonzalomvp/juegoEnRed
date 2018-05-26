@@ -2,43 +2,39 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Client.cpp" />
-    <ClCompile Include="common\core.cpp">
-      <Filter>common</Filter>
+    <ClCompile Include="engine\core.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="common\font.cpp">
-      <Filter>common</Filter>
+    <ClCompile Include="engine\font.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="common\lodepng.cpp">
-      <Filter>common</Filter>
+    <ClCompile Include="engine\lodepng.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="common\sys_win.cpp">
-      <Filter>common</Filter>
+    <ClCompile Include="engine\sys_win.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="common\stdafx.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
+    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="common\core.h">
-      <Filter>common</Filter>
+    <ClInclude Include="engine\core.h">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="common\font.h">
-      <Filter>common</Filter>
+    <ClInclude Include="engine\font.h">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="common\lodepng.h">
-      <Filter>common</Filter>
+    <ClInclude Include="engine\lodepng.h">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="common\sys.h">
-      <Filter>common</Filter>
+    <ClInclude Include="engine\sys.h">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="common\stdafx.h">
-      <Filter>common</Filter>
-    </ClInclude>
+    <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="common">
-      <UniqueIdentifier>{3dfe8715-213e-4795-aeb6-ad6ddc4cf55c}</UniqueIdentifier>
+    <Filter Include="engine">
+      <UniqueIdentifier>{501d4ae6-531a-44eb-aae9-045f2a246e42}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

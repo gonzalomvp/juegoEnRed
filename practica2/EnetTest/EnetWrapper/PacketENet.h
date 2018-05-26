@@ -37,11 +37,11 @@ public:
     unsigned char   GetChannel() const                  { return m_uChannel; }
     
 protected:
+	unsigned char   m_uChannel;
 	size_t          m_uDataLength;
 	byte*           m_pData;
     EPacketType     m_Type;
 	CPeerENet*      m_pPeer;
-	unsigned char   m_uChannel;
 
 };
 

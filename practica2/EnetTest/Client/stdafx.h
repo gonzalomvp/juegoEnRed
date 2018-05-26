@@ -4,7 +4,7 @@
 //=============================================================================
 #ifdef _WIN32
 
-#pragma pack(1)
+//#pragma pack(1)
 #pragma warning(disable:4996) // Using open/close/read... for file access
 
 // Including SDKDDKVer.h defines the highest available Windows platform.
@@ -44,7 +44,7 @@
 
 //=============================================================================
 // PNG loading library
-#include "lodepng.h"
+#include "engine/lodepng.h"
 
 //=============================================================================
 // Common includes
@@ -57,8 +57,10 @@
 #include <fcntl.h>
 #include <math.h>
 
-#include "sys.h"
-#include "core.h"
-#include "font.h"
+#include "engine/sys.h"
+#include "engine/core.h"
+#include "engine/font.h"
+
+#include "Vec2.h"
 
 #endif

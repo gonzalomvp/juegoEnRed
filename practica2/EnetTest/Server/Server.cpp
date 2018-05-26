@@ -1,4 +1,4 @@
-#include "common/stdafx.h"
+#include "stdafx.h"
 #include "Buffer.h"
 #include "ServerENet.h"
 #include "Player.h"
