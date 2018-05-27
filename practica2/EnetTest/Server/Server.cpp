@@ -24,6 +24,10 @@ bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float 
 std::vector<Pickup> g_pickups;
 //std::vector<Player> players;
 std::map<int, Player> g_players;
+
+std::vector<Pickup> g_pickupsToAdd;
+std::vector<int>    g_pickupsToRemove;
+
 int g_idCounter = 0;
 int g_timer = 0;
 
@@ -75,10 +79,20 @@ int _tmain(int argc, _TCHAR* argv[])
 
 			update();
 
-			NetMessagePlayersPositions message;
-			message.players = g_players;
-			message.serialize(buffer);
+			//Send players
+			NetMessagePlayersPositions messagePlayers;
+			messagePlayers.players = g_players;
+			messagePlayers.serialize(buffer);
 			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, false);
+
+			//Send entities to Add or remove
+			NetMessageAddRemovePickups messagePickups;
+			messagePickups.pickupsToAdd    = g_pickupsToAdd;
+			messagePickups.pickupsToRemove = g_pickupsToRemove;
+			messagePickups.serialize(buffer);
+			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, false);
+			g_pickupsToAdd.clear();
+			g_pickupsToRemove.clear();
 
 			Sleep(17);
 		}
@@ -110,6 +124,7 @@ void update() {
 		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
 		Pickup pickup(g_idCounter++, pos);
 		g_pickups.push_back(pickup);
+		g_pickupsToAdd.push_back(pickup);
 	}
 	checkCollisions();
 }
@@ -119,8 +134,9 @@ void checkCollisions() {
 	{
 		if (checkCircleCircle(g_players[1].getPos(), g_players[1].getRadius(), (*it).getPos(), 5))
 		{
-			g_pickups.erase(it);
 			g_players[1].setRadius(g_players[1].getRadius() + 1);
+			g_pickupsToRemove.push_back(it->getId());
+			g_pickups.erase(it);
 			break;
 		}
 	}
