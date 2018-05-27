@@ -7,6 +7,7 @@
 
 #include <ctime>
 #include <Windows.h>
+#include <map>
 
 #define SCR_WIDTH  640
 #define SCR_HEIGHT 480
@@ -20,41 +21,29 @@ void checkCollisions();
 bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
 
 
-std::vector<Pickup*> g_pickups;
-std::vector<Player> players;
+std::vector<Pickup> g_pickups;
+//std::vector<Player> players;
+std::map<int, Player> g_players;
 int g_idCounter = 0;
 int g_timer = 0;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	
-
 	// Create player
-	Player player(200.0, 200.0, 16.0f);
-	players.push_back(player);
+	Player player(1, Vec2(200.0f, 200.0f), 16.0f);
+	g_players[1] = player;
 
 	// Init World
 	init();
 
 	CBuffer buffer;
-	buffer.Write(&player, sizeof(player));
-	buffer.GotoStart();
-
 	CServerENet* pServer = new CServerENet();
 	if (pServer->Init(1234, 5))
 	{
 		while (true)
 		{
-			update();
+			
 			std::vector<CPacketENet*> incommingPackets;
-			pServer->Service(incommingPackets, 0);
-			CBuffer buffer;
-			NetMessageStartMatch message;
-			message.players = players;
-			message.pickups = g_pickups;
-			message.serialize(buffer);
-			//pServer->SendAll(&player, sizeof(player), 0, false);
-			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, false);
 			pServer->Service(incommingPackets, 0);
 
 			for (size_t i = 0; i < incommingPackets.size(); ++i)
@@ -70,16 +59,26 @@ int _tmain(int argc, _TCHAR* argv[])
 							buffer.GotoStart();
 							NetMessageMoveCommand msgMove;
 							msgMove.deserialize(buffer);
-							int dirX = msgMove.mouseX - players[0].m_posX;
-							int dirY = msgMove.mouseY - players[0].m_posY;
-							float length = sqrt(dirX * dirX + dirY * dirY);
-							players[0].m_posX += dirX / length;
-							players[0].m_posY += dirY / length;
+							Vec2 dir = msgMove.mousePos - g_players[1].getPos();
+							g_players[1].setPos(g_players[1].getPos() + dir.norm());
 							break;
 					}
 				}
+				else if (packet->GetType() == EPacketType::CONNECT) {
+					NetMessageStartMatch message;
+					message.player = g_players[1];
+					message.pickups = g_pickups;
+					message.serialize(buffer);
+					pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, false);
+				}
 			}
 
+			update();
+
+			NetMessagePlayersPositions message;
+			message.players = g_players;
+			message.serialize(buffer);
+			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, false);
 
 			Sleep(17);
 		}
@@ -92,32 +91,36 @@ int _tmain(int argc, _TCHAR* argv[])
 	return 0;
 }
 
-void init() {
+void init()
+{
 	srand(timeGetTime());
-	for (size_t i = 0; i < 10; i++) {
+	for (size_t i = 0; i < 10; i++)
+	{
 		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
-		Pickup* pickup = new Pickup(g_idCounter++, pos);
+		Pickup pickup(g_idCounter++, pos);
 		g_pickups.push_back(pickup);
 	}
 }
 
 void update() {
 	++g_timer;
-	if (g_timer >= 100) {
+	if (g_timer >= 100)
+	{
 		g_timer = 0;
 		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
-		Pickup* pickup = new Pickup(g_idCounter++, pos);
+		Pickup pickup(g_idCounter++, pos);
 		g_pickups.push_back(pickup);
 	}
 	checkCollisions();
 }
 
 void checkCollisions() {
-	for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it) {
-		if (checkCircleCircle(Vec2(players[0].m_posX, players[0].m_posY), players[0].m_radius, (*it)->getPos(), 5)) {
-			delete *it;
+	for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it) 
+	{
+		if (checkCircleCircle(g_players[1].getPos(), g_players[1].getRadius(), (*it).getPos(), 5))
+		{
 			g_pickups.erase(it);
-			players[0].m_radius = players[0].m_radius + 1;
+			g_players[1].setRadius(g_players[1].getRadius() + 1);
 			break;
 		}
 	}

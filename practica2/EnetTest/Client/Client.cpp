@@ -6,10 +6,12 @@
 #include "Player.h"
 #include "NetMessage.h"
 #include <Windows.h>
+#include <map>
 
 using namespace ENet;
 
-std::vector<Pickup*> g_pickups;
+std::map<int, Pickup> g_pickups;
+std::map<int, Player> g_players;
 
 int Main(void)
 {
@@ -26,6 +28,8 @@ int Main(void)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	GLuint texture = CORE_LoadPNG("data/ball.png", false);
 
+	CBuffer buffer;
+
 	CClienteENet* pClient = new CClienteENet();
 	pClient->Init();
 
@@ -36,31 +40,61 @@ int Main(void)
 	Sleep(100);
 	//pClient->SendData(pPeer, "pepe", 4, 0, false);
 
-	std::vector<Player> players;
 	while (!SYS_GottaQuit())
 	{
 		std::vector<CPacketENet*>  incommingPackets;
 		pClient->Service(incommingPackets, 0);
-		CBuffer buffer;
-
-		NetMessageStartMatch message;
-		message.numPlayers = 0;
+		
 		for (size_t i = 0; i < incommingPackets.size(); ++i)
 		{
 			CPacketENet* packet = incommingPackets[i];
 			
 			if (packet->GetType() == EPacketType::DATA) {
 				NetMessageType type = *reinterpret_cast<NetMessageType*>(packet->GetData());
+				buffer.Clear();
 				switch (type)
 				{
 					case NETMSG_STARTMATCH:
-						buffer.Clear();
+					{
+						NetMessageStartMatch message;
 						buffer.Write(packet->GetData(), packet->GetDataLength());
 						buffer.GotoStart();
 						message.deserialize(buffer);
-						players = message.players;
-						g_pickups = message.pickups;
+						for (size_t i = 0; i < message.numPickups; i++)
+						{
+							g_pickups[message.pickups[i].getId()] = message.pickups[i];
+						}
 						break;
+					}
+					case NETMSG_PLAYERSPOSITIONS:
+					{
+						NetMessagePlayersPositions message;
+						buffer.Write(packet->GetData(), packet->GetDataLength());
+						buffer.GotoStart();
+						message.deserialize(buffer);
+						g_players = message.players;
+						break;
+					}
+					
+					case NETMSG_ADDREMOVEPICKUPS:
+					{
+						NetMessageAddRemovePickups message;
+						buffer.Write(packet->GetData(), packet->GetDataLength());
+						buffer.GotoStart();
+						message.deserialize(buffer);
+
+						for (size_t i = 0; i < message.numPickupsToAdd; i++)
+						{
+							g_pickups[message.pickupsToAdd[i].getId()] = message.pickupsToAdd[i];
+						}
+
+						for (size_t i = 0; i < message.numPickupsToRemove; i++)
+						{
+							g_pickups.erase(message.pickupsToRemove[i]);
+						}
+
+						break;
+					}
 				}
 			}
 			
@@ -69,8 +103,7 @@ int Main(void)
 
 		ivec2 sysMousePos = SYS_MousePos();
 		NetMessageMoveCommand msgMove;
-		msgMove.mouseX = sysMousePos.x;
-		msgMove.mouseY = sysMousePos.y;
+		msgMove.mousePos = Vec2(sysMousePos.x, sysMousePos.y);
 		buffer.Clear();
 		msgMove.serialize(buffer);
 
@@ -79,16 +112,18 @@ int Main(void)
 
 		glClear(GL_COLOR_BUFFER_BIT);
 	
-		for (size_t i = 0; i < players.size(); i++)
+		for (auto it = g_players.begin(); it != g_players.end(); ++it)
 		{
-			Player player = players[i];
-			CORE_RenderCenteredSprite(vmake(player.m_posX, player.m_posY), vmake(player.m_radius * 2.0f, player.m_radius * 2.0f), texture, 1.0f);
+			Player player = it->second;
+			CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
 		}
-		for (size_t i = 0; i < g_pickups.size(); i++)
+
+		for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)
 		{
-			Pickup* pickup = g_pickups[i];
-			CORE_RenderCenteredSprite(vmake(pickup->getPos().x, pickup->getPos().y), vmake(10, 10), texture, 1.0f);
+			Pickup pickup = it->second;
+			CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(10, 10), texture, 1.0f);
 		}
+
 		SYS_Show();
 		SYS_Pump();
 		SYS_Sleep(17);

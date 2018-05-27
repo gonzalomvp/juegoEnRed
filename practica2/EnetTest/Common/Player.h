@@ -5,10 +5,19 @@ class Player
 {
 public:
 	Player() {}
-	Player(float posX, float posY, float radius) : m_posX(posX), m_posY(posY), m_radius(radius) {}
+	Player(int id, Vec2 pos, float radius) : m_id(id), m_pos(pos), m_radius(radius) {}
 
-	float m_posX;
-	float m_posY;
+	int   getId()     const { return m_id;     }
+	Vec2  getPos()    const { return m_pos;    }
+	float getRadius() const { return m_radius; }
+
+	void setId    (int id)         { m_id = id;         }
+	void setPos   (const Vec2 pos) { m_pos = pos;       }
+	void setRadius(float radius)   { m_radius = radius; }
+
+private:
+	int   m_id;
+	Vec2  m_pos;
 	float m_radius;
-	Vec2 pos;
+	
 };
