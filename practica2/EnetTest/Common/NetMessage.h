@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Buffer.h"
+#include "Pickup.h"
 #include "Player.h"
 #include <vector>
 
@@ -26,6 +27,9 @@ struct NetMessageStartMatch : public NetMessage
 	NetMessageStartMatch() { Type = NETMSG_STARTMATCH; }
 	std::vector<Player> players;
 	int numPlayers;
+
+	std::vector<Pickup*> pickups;
+	int numPickups;
 	int id;
 };
 

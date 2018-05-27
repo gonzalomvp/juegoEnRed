@@ -21,7 +21,12 @@ void NetMessageStartMatch::serialize(CBuffer& buffer)
 	{
 		buffer.Write(&players[i], sizeof(players[i]));
 	}
-	
+	numPickups = pickups.size();
+	buffer.Write(&numPickups, sizeof(numPickups));
+	for (size_t i = 0; i < numPickups; i++)
+	{
+		buffer.Write(pickups[i], sizeof(Pickup));
+	}
 }
 
 void NetMessageStartMatch::deserialize(CBuffer& buffer)
@@ -34,6 +39,13 @@ void NetMessageStartMatch::deserialize(CBuffer& buffer)
 		Player player;
 		buffer.Read(&player, sizeof(Player));
 		players.push_back(player);
+	}
+	buffer.Read(&numPickups, sizeof(numPickups));
+	for (size_t i = 0; i < numPickups; i++)
+	{
+		Pickup* pickup = new Pickup(0, Vec2());
+		buffer.Read(pickup, sizeof(Pickup));
+		pickups.push_back(pickup);
 	}
 }
 

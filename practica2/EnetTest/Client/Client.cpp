@@ -2,11 +2,14 @@
 #include "Buffer.h"
 #include "ClientENet.h"
 #include "PacketENet.h"
+#include "Pickup.h"
 #include "Player.h"
 #include "NetMessage.h"
 #include <Windows.h>
 
 using namespace ENet;
+
+std::vector<Pickup*> g_pickups;
 
 int Main(void)
 {
@@ -34,7 +37,7 @@ int Main(void)
 	//pClient->SendData(pPeer, "pepe", 4, 0, false);
 
 	std::vector<Player> players;
-	while (true)
+	while (!SYS_GottaQuit())
 	{
 		std::vector<CPacketENet*>  incommingPackets;
 		pClient->Service(incommingPackets, 0);
@@ -56,6 +59,7 @@ int Main(void)
 						buffer.GotoStart();
 						message.deserialize(buffer);
 						players = message.players;
+						g_pickups = message.pickups;
 						break;
 				}
 			}
@@ -78,7 +82,12 @@ int Main(void)
 		for (size_t i = 0; i < players.size(); i++)
 		{
 			Player player = players[i];
-			CORE_RenderCenteredSprite(vmake(player.m_posX, player.m_posY), vmake(player.m_radius, player.m_radius), texture, 1.0f);
+			CORE_RenderCenteredSprite(vmake(player.m_posX, player.m_posY), vmake(player.m_radius * 2.0f, player.m_radius * 2.0f), texture, 1.0f);
+		}
+		for (size_t i = 0; i < g_pickups.size(); i++)
+		{
+			Pickup* pickup = g_pickups[i];
+			CORE_RenderCenteredSprite(vmake(pickup->getPos().x, pickup->getPos().y), vmake(10, 10), texture, 1.0f);
 		}
 		SYS_Show();
 		SYS_Pump();
