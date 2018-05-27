@@ -26,7 +26,7 @@ int Main(void)
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GLuint texture = CORE_LoadPNG("data/ball.png", false);
+	GLuint texture = CORE_LoadPNG("data/bubble.png", false);
 
 	CBuffer buffer;
 
@@ -115,7 +115,14 @@ int Main(void)
 		for (auto it = g_players.begin(); it != g_players.end(); ++it)
 		{
 			Player player = it->second;
-			CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
+			//CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
+			if (player.getId() == 1)
+			{
+				CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
+			}
+			else {
+				CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(0, 255, 0, 255));
+			}
 		}
 
 		for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)

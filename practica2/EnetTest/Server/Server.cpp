@@ -19,6 +19,7 @@ void update();
 void checkCollisions();
 
 bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
+bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
 
 
 std::vector<Pickup> g_pickups;
@@ -34,8 +35,11 @@ int g_timer = 0;
 int _tmain(int argc, _TCHAR* argv[])
 {
 	// Create player
-	Player player(1, Vec2(200.0f, 200.0f), 16.0f);
+	Player player(1, Vec2(200.0f, 200.0f), 22.0f);
 	g_players[1] = player;
+
+	player = Player(2, Vec2(100.0f, 100.0f), 16.0f);
+	g_players[2] = player;
 
 	// Init World
 	init();
@@ -130,6 +134,19 @@ void update() {
 }
 
 void checkCollisions() {
+	for (auto it = g_players.begin(); std::next(it) != g_players.end(); ++it)
+	{
+		Player p1 = it->second;
+		Player p2 = std::next(it)->second;
+
+		if (checkAbsorve(p1.getPos(), p1.getRadius(), p2.getPos(), p2.getRadius()))
+		{
+			g_players.erase(std::next(it));
+			g_players[p1.getId()].setRadius(p1.getRadius() + p2.getRadius());
+			break;
+		}
+	}
+
 	for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it) 
 	{
 		if (checkCircleCircle(g_players[1].getPos(), g_players[1].getRadius(), (*it).getPos(), 5))
@@ -144,4 +161,8 @@ void checkCollisions() {
 
 bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2) {
 	return pos1.distance(pos2) < radius1 + radius2;
+}
+
+bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2) {
+	return pos1.distance(pos2) + radius2 <= radius1;
 }
