@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Buffer.h"
+#include "Entity.h"
 #include "ServerENet.h"
 #include "Pickup.h"
 #include "Player.h"
@@ -17,17 +18,17 @@ using namespace ENet;
 void init();
 void update();
 void checkCollisions();
-Player& registerPlayer();
+Entity& registerPlayer();
 
 bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
 bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
 
 
-std::vector<Pickup> g_pickups;
+std::vector<Entity> g_pickups;
 //std::vector<Player> players;
-std::map<int, Player> g_players;
+std::map<int, Entity> g_players;
 
-std::vector<Pickup> g_pickupsToAdd;
+std::vector<Entity> g_pickupsToAdd;
 std::vector<int>    g_pickupsToRemove;
 
 int g_idCounter = 0;
@@ -116,7 +117,7 @@ void init()
 	for (size_t i = 0; i < 10; i++)
 	{
 		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
-		Pickup pickup(g_idCounter++, pos);
+		Entity pickup(g_idCounter++, pos, 5.0f);
 		g_pickups.push_back(pickup);
 	}
 }
@@ -127,7 +128,7 @@ void update() {
 	{
 		g_timer = 0;
 		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
-		Pickup pickup(g_idCounter++, pos);
+		Entity pickup(g_idCounter++, pos, 5.0f);
 		g_pickups.push_back(pickup);
 		g_pickupsToAdd.push_back(pickup);
 	}
@@ -138,11 +139,11 @@ void checkCollisions() {
 	auto itPlayer = g_players.begin();
 	while (itPlayer != g_players.end())
 	{
-		Player& p1 = itPlayer->second;
+		Entity& p1 = itPlayer->second;
 		bool isAlive = true;
 		for (auto itPlayerNext = std::next(itPlayer); itPlayerNext != g_players.end(); ++itPlayerNext)
 		{
-			Player& p2 = itPlayerNext->second;
+			Entity& p2 = itPlayerNext->second;
 			if (checkAbsorve(p1.getPos(), p1.getRadius(), p2.getPos(), p2.getRadius()))
 			{
 				p1.setRadius(p1.getRadius() + p2.getRadius());
@@ -152,7 +153,7 @@ void checkCollisions() {
 			}
 			else if (checkAbsorve(p2.getPos(), p2.getRadius(), p1.getPos(), p1.getRadius()))
 			{
-				p2.setRadius(p2.getRadius() + p1.getRadius());
+				p2.setRadius(p2.getRadius() + p1.getRadius() * 0.5f);
 				g_pickupsToRemove.push_back(p1.getId());
 				itPlayer = g_players.erase(itPlayer);
 				isAlive = false;
@@ -164,9 +165,9 @@ void checkCollisions() {
 		{
 			for (auto itPickup = g_pickups.begin(); itPickup != g_pickups.end(); ++itPickup)
 			{
-				if (checkCircleCircle(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), 5))
+				if (checkAbsorve(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), (*itPickup).getRadius()))
 				{
-					p1.setRadius(p1.getRadius() + 1);
+					p1.setRadius(p1.getRadius() + 2);
 					g_pickupsToRemove.push_back(itPickup->getId());
 					g_pickups.erase(itPickup);
 					break;
@@ -196,11 +197,11 @@ bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radiu
 	return pos1.distance(pos2) + radius2 <= radius1;
 }
 
-Player& registerPlayer()
+Entity& registerPlayer()
 {
 	// Create player
 
-	Player player(g_idCounter, Vec2(200.0f, 200.0f), 22.0f);
+	Entity player(g_idCounter, Vec2(200.0f, 200.0f), 22.0f);
 	g_players[g_idCounter] = player;
 	++g_idCounter;
 	return player;

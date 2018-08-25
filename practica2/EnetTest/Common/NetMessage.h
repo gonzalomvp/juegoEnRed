@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Buffer.h"
+#include "Entity.h"
 #include "Pickup.h"
 #include "Player.h"
 #include <map>
@@ -29,10 +30,10 @@ struct NetMessageStartMatch : public NetMessage
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
 
-	Player player;
+	Entity player;
 
 	int numPickups;
-	std::vector<Pickup> pickups;
+	std::vector<Entity> pickups;
 };
 
 struct NetMessagePlayersPositions : public NetMessage
@@ -43,7 +44,7 @@ struct NetMessagePlayersPositions : public NetMessage
 	virtual void deserialize(CBuffer& buffer);
 
 	int numPlayers;
-	std::map<int, Player> players;
+	std::map<int, Entity> players;
 };
 
 struct NetMessageAddRemovePickups : public NetMessage
@@ -54,7 +55,7 @@ struct NetMessageAddRemovePickups : public NetMessage
 	virtual void deserialize(CBuffer& buffer);
 
 	int numPickupsToAdd;
-	std::vector<Pickup> pickupsToAdd;
+	std::vector<Entity> pickupsToAdd;
 
 	int numPickupsToRemove;
 	std::vector<int> pickupsToRemove;

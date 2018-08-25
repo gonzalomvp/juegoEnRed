@@ -35,7 +35,7 @@ void NetMessageStartMatch::deserialize(CBuffer& buffer)
 	buffer.Read(&numPickups, sizeof(numPickups));
 	for (size_t i = 0; i < numPickups; i++)
 	{
-		Pickup pickup;
+		Entity pickup;
 		buffer.Read(&pickup, sizeof(pickup));
 		pickups.push_back(pickup);
 	}
@@ -60,7 +60,7 @@ void NetMessagePlayersPositions::deserialize(CBuffer& buffer)
 
 	for (size_t i = 0; i < numPlayers; i++)
 	{
-		Player player;
+		Entity player;
 		buffer.Read(&player, sizeof(player));
 		players[player.getId()] = player;
 	}
@@ -92,7 +92,7 @@ void NetMessageAddRemovePickups::deserialize(CBuffer& buffer)
 	buffer.Read(&numPickupsToAdd, sizeof(numPickupsToAdd));
 	for (size_t i = 0; i < numPickupsToAdd; i++)
 	{
-		Pickup pickup;
+		Entity pickup;
 		buffer.Read(&pickup, sizeof(pickup));
 		pickupsToAdd.push_back(pickup);
 	}

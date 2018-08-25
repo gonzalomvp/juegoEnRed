@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Buffer.h"
 #include "ClientENet.h"
+#include "Entity.h"
 #include "PacketENet.h"
 #include "Pickup.h"
 #include "Player.h"
@@ -10,8 +11,8 @@
 
 using namespace ENet;
 
-std::map<int, Pickup> g_pickups;
-std::map<int, Player> g_players;
+std::map<int, Entity> g_pickups;
+std::map<int, Entity> g_players;
 
 int Main(void)
 {
@@ -27,7 +28,7 @@ int Main(void)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	Player player;
+	Entity player;
 	bool isAlive = true;
 
 	GLuint texture = CORE_LoadPNG("data/bubble.png", false);
@@ -39,7 +40,7 @@ int Main(void)
 
 	CPeerENet* pPeer = pClient->Connect("127.0.0.1", 1234, 2);
 
-	std::vector<CPacketENet*>  incommingPackets;
+	std::vector<CPacketENet*> incommingPackets;
 	pClient->Service(incommingPackets, 0);
 	Sleep(100);
 	//pClient->SendData(pPeer, "pepe", 4, 0, false);
@@ -138,7 +139,7 @@ int Main(void)
 	
 		for (auto it = g_players.begin(); it != g_players.end(); ++it)
 		{
-			Player playerToRender = it->second;
+			Entity playerToRender = it->second;
 			//CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
 			if (playerToRender.getId() == player.getId())
 			{
@@ -152,7 +153,7 @@ int Main(void)
 
 		for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)
 		{
-			Pickup pickup = it->second;
+			Entity pickup = it->second;
 			CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(10, 10), texture, 1.0f);
 		}
 		CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
