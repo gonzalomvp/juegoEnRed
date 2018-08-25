@@ -67,5 +67,6 @@ struct NetMessageMoveCommand : public NetMessage
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
 
+	int playerId;
 	Vec2 mousePos;
 };

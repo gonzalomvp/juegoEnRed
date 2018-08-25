@@ -17,6 +17,7 @@ using namespace ENet;
 void init();
 void update();
 void checkCollisions();
+Player& registerPlayer();
 
 bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
 bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
@@ -34,12 +35,12 @@ int g_timer = 0;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	// Create player
-	Player player(1, Vec2(200.0f, 200.0f), 22.0f);
-	g_players[1] = player;
+	//// Create player
+	//Player player(1, Vec2(200.0f, 200.0f), 22.0f);
+	//g_players[1] = player;
 
-	player = Player(2, Vec2(100.0f, 100.0f), 16.0f);
-	g_players[2] = player;
+	//player = Player(2, Vec2(100.0f, 100.0f), 16.0f);
+	//g_players[2] = player;
 
 	// Init World
 	init();
@@ -67,17 +68,17 @@ int _tmain(int argc, _TCHAR* argv[])
 							buffer.GotoStart();
 							NetMessageMoveCommand msgMove;
 							msgMove.deserialize(buffer);
-							Vec2 dir = msgMove.mousePos - g_players[1].getPos();
-							g_players[1].setPos(g_players[1].getPos() + dir.norm());
+							Vec2 dir = msgMove.mousePos - g_players[msgMove.playerId].getPos();
+							g_players[msgMove.playerId].setPos(g_players[msgMove.playerId].getPos() + dir.norm());
 							break;
 					}
 				}
 				else if (packet->GetType() == EPacketType::CONNECT) {
 					NetMessageStartMatch message;
-					message.player = g_players[1];
+					message.player = registerPlayer();
 					message.pickups = g_pickups;
 					message.serialize(buffer);
-					pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, false);
+					pServer->SendData(packet->GetPeer(), buffer.GetBytes(), buffer.GetSize(), 0, true);
 				}
 			}
 
@@ -134,29 +135,42 @@ void update() {
 }
 
 void checkCollisions() {
-	for (auto it = g_players.begin(); std::next(it) != g_players.end(); ++it)
+	for (auto itPlayer = g_players.begin(); itPlayer != g_players.end(); ++itPlayer)
 	{
-		Player p1 = it->second;
-		Player p2 = std::next(it)->second;
-
-		if (checkAbsorve(p1.getPos(), p1.getRadius(), p2.getPos(), p2.getRadius()))
+		Player& p1 = itPlayer->second;
+		for (auto itPlayerNext = std::next(itPlayer); itPlayerNext != g_players.end(); ++itPlayerNext)
 		{
-			g_players.erase(std::next(it));
-			g_players[p1.getId()].setRadius(p1.getRadius() + p2.getRadius());
-			break;
+			Player& p2 = itPlayerNext->second;
+			if (checkAbsorve(p1.getPos(), p1.getRadius(), p2.getPos(), p2.getRadius()))
+			{
+				p1.setRadius(p1.getRadius() + p2.getRadius());
+				g_pickupsToRemove.push_back(p2.getId());
+				g_players.erase(itPlayerNext);
+				break;
+			}
+		}
+		for (auto itPickup = g_pickups.begin(); itPickup != g_pickups.end(); ++itPickup)
+		{
+			if (checkCircleCircle(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), 5))
+			{
+				p1.setRadius(p1.getRadius() + 1);
+				g_pickupsToRemove.push_back(itPickup->getId());
+				g_pickups.erase(itPickup);
+				break;
+			}
 		}
 	}
 
-	for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it) 
-	{
-		if (checkCircleCircle(g_players[1].getPos(), g_players[1].getRadius(), (*it).getPos(), 5))
-		{
-			g_players[1].setRadius(g_players[1].getRadius() + 1);
-			g_pickupsToRemove.push_back(it->getId());
-			g_pickups.erase(it);
-			break;
-		}
-	}
+	//for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it) 
+	//{
+	//	if (checkCircleCircle(g_players[1].getPos(), g_players[1].getRadius(), (*it).getPos(), 5))
+	//	{
+	//		g_players[1].setRadius(g_players[1].getRadius() + 1);
+	//		g_pickupsToRemove.push_back(it->getId());
+	//		g_pickups.erase(it);
+	//		break;
+	//	}
+	//}
 }
 
 bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2) {
@@ -165,4 +179,14 @@ bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float 
 
 bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2) {
 	return pos1.distance(pos2) + radius2 <= radius1;
+}
+
+Player& registerPlayer()
+{
+	// Create player
+
+	Player player(g_idCounter, Vec2(200.0f, 200.0f), 22.0f);
+	g_players[g_idCounter] = player;
+	++g_idCounter;
+	return player;
 }

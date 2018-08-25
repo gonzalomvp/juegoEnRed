@@ -109,11 +109,13 @@ void NetMessageAddRemovePickups::deserialize(CBuffer& buffer)
 void NetMessageMoveCommand::serialize(CBuffer& buffer)
 {
 	NetMessage::serialize(buffer);
+	buffer.Write(&playerId, sizeof(playerId));
 	buffer.Write(&mousePos, sizeof(mousePos));
 }
 
 void NetMessageMoveCommand::deserialize(CBuffer& buffer)
 {
 	NetMessage::deserialize(buffer);
+	buffer.Read(&playerId, sizeof(playerId));
 	buffer.Read(&mousePos, sizeof(mousePos));
 }
