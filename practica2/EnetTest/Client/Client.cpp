@@ -142,7 +142,8 @@ int Main(void)
 			//CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
 			if (playerToRender.getId() == player.getId())
 			{
-				CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
+				player.setPos(playerToRender.getPos());
+				player.setRadius(playerToRender.getRadius());
 			}
 			else {
 				CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), texture, 1.0f, rgbamake(0, 255, 0, 255));
@@ -154,6 +155,7 @@ int Main(void)
 			Pickup pickup = it->second;
 			CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(10, 10), texture, 1.0f);
 		}
+		CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
 
 		SYS_Show();
 		SYS_Pump();

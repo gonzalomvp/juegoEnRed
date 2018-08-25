@@ -135,9 +135,11 @@ void update() {
 }
 
 void checkCollisions() {
-	for (auto itPlayer = g_players.begin(); itPlayer != g_players.end(); ++itPlayer)
+	auto itPlayer = g_players.begin();
+	while (itPlayer != g_players.end())
 	{
 		Player& p1 = itPlayer->second;
+		bool isAlive = true;
 		for (auto itPlayerNext = std::next(itPlayer); itPlayerNext != g_players.end(); ++itPlayerNext)
 		{
 			Player& p2 = itPlayerNext->second;
@@ -148,16 +150,29 @@ void checkCollisions() {
 				g_players.erase(itPlayerNext);
 				break;
 			}
-		}
-		for (auto itPickup = g_pickups.begin(); itPickup != g_pickups.end(); ++itPickup)
-		{
-			if (checkCircleCircle(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), 5))
+			else if (checkAbsorve(p2.getPos(), p2.getRadius(), p1.getPos(), p1.getRadius()))
 			{
-				p1.setRadius(p1.getRadius() + 1);
-				g_pickupsToRemove.push_back(itPickup->getId());
-				g_pickups.erase(itPickup);
+				p2.setRadius(p2.getRadius() + p1.getRadius());
+				g_pickupsToRemove.push_back(p1.getId());
+				itPlayer = g_players.erase(itPlayer);
+				isAlive = false;
 				break;
 			}
+		}
+
+		if (isAlive)
+		{
+			for (auto itPickup = g_pickups.begin(); itPickup != g_pickups.end(); ++itPickup)
+			{
+				if (checkCircleCircle(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), 5))
+				{
+					p1.setRadius(p1.getRadius() + 1);
+					g_pickupsToRemove.push_back(itPickup->getId());
+					g_pickups.erase(itPickup);
+					break;
+				}
+			}
+			++itPlayer;
 		}
 	}
 
