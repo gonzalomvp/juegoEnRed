@@ -49,7 +49,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	CBuffer buffer(2048);
 	CServerENet* pServer = new CServerENet();
-	if (pServer->Init(1234, 1))
+	if (pServer->Init(1234, 5))
 	{
 		while (true)
 		{
@@ -112,7 +112,7 @@ int _tmain(int argc, _TCHAR* argv[])
 					{
 						g_peers.erase(packet->GetPeer());
 					}
-					pServer->Disconnect(packet->GetPeer());
+					//pServer->Disconnect(packet->GetPeer());
 				}
 			}
 
