@@ -11,6 +11,7 @@ enum NetMessageType
 {
 	NETMSG_UNKNOWN,
 	NETMSG_STARTMATCH,
+	NETMSG_DISCONNECT,
 	NETMSG_PLAYERSPOSITIONS,
 	NETMSG_ADDREMOVEPICKUPS,
 	NETMSG_MOVECOMMAND
@@ -34,6 +35,16 @@ struct NetMessageStartMatch : public NetMessage
 
 	int numPickups;
 	std::vector<Entity> pickups;
+};
+
+struct NetMessageDisconnect : public NetMessage
+{
+	NetMessageDisconnect() { Type = NETMSG_DISCONNECT; }
+
+	virtual void serialize(CBuffer& buffer);
+	virtual void deserialize(CBuffer& buffer);
+
+	int playerId;
 };
 
 struct NetMessagePlayersPositions : public NetMessage

@@ -41,6 +41,18 @@ void NetMessageStartMatch::deserialize(CBuffer& buffer)
 	}
 }
 
+void NetMessageDisconnect::serialize(CBuffer& buffer)
+{
+	NetMessage::serialize(buffer);
+	buffer.Write(&playerId, sizeof(playerId));
+}
+
+void NetMessageDisconnect::deserialize(CBuffer& buffer)
+{
+	NetMessage::deserialize(buffer);
+	buffer.Read(&playerId, sizeof(playerId));
+}
+
 void NetMessagePlayersPositions::serialize(CBuffer& buffer)
 {
 	NetMessage::serialize(buffer);

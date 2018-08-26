@@ -18,7 +18,7 @@ using namespace ENet;
 void init();
 void update();
 void checkCollisions();
-Entity& registerPlayer();
+Entity registerPlayer();
 
 bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
 bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
@@ -27,6 +27,7 @@ bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radiu
 std::vector<Entity> g_pickups;
 //std::vector<Player> players;
 std::map<int, Entity> g_players;
+std::map<CPeerENet*, int> g_peers;
 
 std::vector<Entity> g_pickupsToAdd;
 std::vector<int>    g_pickupsToRemove;
@@ -46,9 +47,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	// Init World
 	init();
 
-	CBuffer buffer;
+	CBuffer buffer(2048);
 	CServerENet* pServer = new CServerENet();
-	if (pServer->Init(1234, 5))
+	if (pServer->Init(1234, 1))
 	{
 		while (true)
 		{
@@ -64,14 +65,34 @@ int _tmain(int argc, _TCHAR* argv[])
 					switch (type)
 					{
 						case NETMSG_MOVECOMMAND:
+						{
 							buffer.Clear();
 							buffer.Write(packet->GetData(), packet->GetDataLength());
 							buffer.GotoStart();
 							NetMessageMoveCommand msgMove;
 							msgMove.deserialize(buffer);
-							Vec2 dir = msgMove.mousePos - g_players[msgMove.playerId].getPos();
-							g_players[msgMove.playerId].setPos(g_players[msgMove.playerId].getPos() + dir.norm());
+							if (g_players.count(msgMove.playerId))
+							{
+								Vec2 dir = msgMove.mousePos - g_players[msgMove.playerId].getPos();
+								g_players[msgMove.playerId].setPos(g_players[msgMove.playerId].getPos() + dir.norm());
+							}
+							
 							break;
+						}
+							
+						case NETMSG_DISCONNECT:
+						{
+							buffer.Clear();
+							buffer.Write(packet->GetData(), packet->GetDataLength());
+							buffer.GotoStart();
+							NetMessageDisconnect msgDisconnect;
+							msgDisconnect.deserialize(buffer);
+							if (g_players.count(msgDisconnect.playerId))
+							{
+								g_players.erase(msgDisconnect.playerId);
+							}
+							break;
+						}
 					}
 				}
 				else if (packet->GetType() == EPacketType::CONNECT) {
@@ -80,6 +101,18 @@ int _tmain(int argc, _TCHAR* argv[])
 					message.pickups = g_pickups;
 					message.serialize(buffer);
 					pServer->SendData(packet->GetPeer(), buffer.GetBytes(), buffer.GetSize(), 0, true);
+					g_peers[packet->GetPeer()] = message.player.getId();
+				}
+				else if (packet->GetType() == EPacketType::DISCONNECT) {
+					if (g_players.count(g_peers[packet->GetPeer()]))
+					{
+						g_players.erase(g_peers[packet->GetPeer()]);
+					}
+					if (g_peers.count(packet->GetPeer()))
+					{
+						g_peers.erase(packet->GetPeer());
+					}
+					pServer->Disconnect(packet->GetPeer());
 				}
 			}
 
@@ -89,14 +122,14 @@ int _tmain(int argc, _TCHAR* argv[])
 			NetMessagePlayersPositions messagePlayers;
 			messagePlayers.players = g_players;
 			messagePlayers.serialize(buffer);
-			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, false);
+			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 1, false);
 
 			//Send entities to Add or remove
 			NetMessageAddRemovePickups messagePickups;
 			messagePickups.pickupsToAdd    = g_pickupsToAdd;
 			messagePickups.pickupsToRemove = g_pickupsToRemove;
 			messagePickups.serialize(buffer);
-			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, false);
+			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, true);
 			g_pickupsToAdd.clear();
 			g_pickupsToRemove.clear();
 
@@ -114,7 +147,7 @@ int _tmain(int argc, _TCHAR* argv[])
 void init()
 {
 	srand(timeGetTime());
-	for (size_t i = 0; i < 10; i++)
+	for (size_t i = 0; i < 35; i++)
 	{
 		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
 		Entity pickup(g_idCounter++, pos, 5.0f);
@@ -140,7 +173,6 @@ void checkCollisions() {
 	while (itPlayer != g_players.end())
 	{
 		Entity& p1 = itPlayer->second;
-		bool isAlive = true;
 		for (auto itPlayerNext = std::next(itPlayer); itPlayerNext != g_players.end(); ++itPlayerNext)
 		{
 			Entity& p2 = itPlayerNext->second;
@@ -156,25 +188,22 @@ void checkCollisions() {
 				p2.setRadius(p2.getRadius() + p1.getRadius() * 0.5f);
 				g_pickupsToRemove.push_back(p1.getId());
 				itPlayer = g_players.erase(itPlayer);
-				isAlive = false;
+				p1 = itPlayer->second;
 				break;
 			}
 		}
 
-		if (isAlive)
+		for (auto itPickup = g_pickups.begin(); itPickup != g_pickups.end(); ++itPickup)
 		{
-			for (auto itPickup = g_pickups.begin(); itPickup != g_pickups.end(); ++itPickup)
+			if (checkAbsorve(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), (*itPickup).getRadius()))
 			{
-				if (checkAbsorve(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), (*itPickup).getRadius()))
-				{
-					p1.setRadius(p1.getRadius() + 2);
-					g_pickupsToRemove.push_back(itPickup->getId());
-					g_pickups.erase(itPickup);
-					break;
-				}
+				p1.setRadius(p1.getRadius() + 2);
+				g_pickupsToRemove.push_back(itPickup->getId());
+				g_pickups.erase(itPickup);
+				break;
 			}
-			++itPlayer;
 		}
+		++itPlayer;
 	}
 
 	//for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it) 
@@ -197,7 +226,7 @@ bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radiu
 	return pos1.distance(pos2) + radius2 <= radius1;
 }
 
-Entity& registerPlayer()
+Entity registerPlayer()
 {
 	// Create player
 

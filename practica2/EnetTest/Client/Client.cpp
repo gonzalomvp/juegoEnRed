@@ -30,10 +30,11 @@ int Main(void)
 	
 	Entity player;
 	bool isAlive = true;
+	bool isConnected = false;
 
 	GLuint texture = CORE_LoadPNG("data/bubble.png", false);
 
-	CBuffer buffer;
+	CBuffer buffer(2048);
 
 	CClienteENet* pClient = new CClienteENet();
 	pClient->Init();
@@ -45,8 +46,9 @@ int Main(void)
 	Sleep(100);
 	//pClient->SendData(pPeer, "pepe", 4, 0, false);
 
-	while (!SYS_GottaQuit() && isAlive)
+	while (pPeer && !SYS_GottaQuit() && isAlive)
 	{
+		
 		std::vector<CPacketENet*>  incommingPackets;
 		pClient->Service(incommingPackets, 0);
 		
@@ -72,6 +74,7 @@ int Main(void)
 						{
 							g_pickups[message.pickups[i].getId()] = message.pickups[i];
 						}
+						isConnected = true;
 						break;
 					}
 					case NETMSG_PLAYERSPOSITIONS:
@@ -116,54 +119,60 @@ int Main(void)
 			
 		}
 
-		if (!isAlive)
+		if (isConnected)
 		{
-			break;
-		}
+			ivec2 sysMousePos = SYS_MousePos();
 
-
-		ivec2 sysMousePos = SYS_MousePos();
-
-		if (sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT)
-		{
-			NetMessageMoveCommand msgMove;
-			msgMove.playerId = player.getId();
-			msgMove.mousePos = Vec2(sysMousePos.x, sysMousePos.y);
-			buffer.Clear();
-			msgMove.serialize(buffer);
-
-			pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, false);
-		}
-		
-		glClear(GL_COLOR_BUFFER_BIT);
-	
-		for (auto it = g_players.begin(); it != g_players.end(); ++it)
-		{
-			Entity playerToRender = it->second;
-			//CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
-			if (playerToRender.getId() == player.getId())
+			if (sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT)
 			{
-				player.setPos(playerToRender.getPos());
-				player.setRadius(playerToRender.getRadius());
+				NetMessageMoveCommand msgMove;
+				msgMove.playerId = player.getId();
+				msgMove.mousePos = Vec2(sysMousePos.x, sysMousePos.y);
+				buffer.Clear();
+				msgMove.serialize(buffer);
+
+				pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, true);
 			}
-			else {
-				CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), texture, 1.0f, rgbamake(0, 255, 0, 255));
+
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			for (auto it = g_players.begin(); it != g_players.end(); ++it)
+			{
+				Entity playerToRender = it->second;
+				//CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
+				if (playerToRender.getId() == player.getId())
+				{
+					player.setPos(playerToRender.getPos());
+					player.setRadius(playerToRender.getRadius());
+				}
+				else {
+					CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), texture, 1.0f, rgbamake(0, 255, 0, 255));
+				}
 			}
+
+			for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)
+			{
+				Entity pickup = it->second;
+				CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(10, 10), texture, 1.0f);
+			}
+			CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
 		}
 
-		for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)
-		{
-			Entity pickup = it->second;
-			CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(10, 10), texture, 1.0f);
-		}
-		CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
+
+		
 
 		SYS_Show();
 		SYS_Pump();
 		SYS_Sleep(17);
 	}
 
-	pClient->Disconnect(pPeer);
+	NetMessageDisconnect msgDisconnect;
+	msgDisconnect.playerId = player.getId();
+	buffer.Clear();
+	msgDisconnect.serialize(buffer);
+	//pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, false);
+
+	//pClient->Disconnect(pPeer);
 
 	FONT_End();
 	CORE_EndSound();

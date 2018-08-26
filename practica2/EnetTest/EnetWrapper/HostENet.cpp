@@ -140,8 +140,11 @@ void CHostENet::DisconnectReceived(CPeerENet* conexion)
         else
             ++it;
     }
-    m_PeerList.erase(it,it);
 
+	if (found) {
+		m_PeerList.erase(it);
+	}
+    
     if (m_PeerList.size() == 0)
         m_Status = INIT_NOT_CONNECTED;
 }
