@@ -18,7 +18,7 @@ using namespace ENet;
 void init();
 void update();
 void checkCollisions();
-Entity registerPlayer();
+Entity registerPlayer(int id);
 
 bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
 bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
@@ -27,7 +27,7 @@ bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radiu
 std::vector<Entity> g_pickups;
 //std::vector<Player> players;
 std::map<int, Entity> g_players;
-std::map<CPeerENet*, int> g_peers;
+//std::map<CPeerENet*, int> g_peers;
 
 std::vector<Entity> g_pickupsToAdd;
 std::vector<int>    g_pickupsToRemove;
@@ -97,20 +97,15 @@ int _tmain(int argc, _TCHAR* argv[])
 				}
 				else if (packet->GetType() == EPacketType::CONNECT) {
 					NetMessageStartMatch message;
-					message.player = registerPlayer();
+					message.player = registerPlayer(reinterpret_cast<int>(packet->GetPeer()));
 					message.pickups = g_pickups;
 					message.serialize(buffer);
 					pServer->SendData(packet->GetPeer(), buffer.GetBytes(), buffer.GetSize(), 0, true);
-					g_peers[packet->GetPeer()] = message.player.getId();
 				}
 				else if (packet->GetType() == EPacketType::DISCONNECT) {
-					if (g_players.count(g_peers[packet->GetPeer()]))
+					if (g_players.count(reinterpret_cast<int>(packet->GetPeer())))
 					{
-						g_players.erase(g_peers[packet->GetPeer()]);
-					}
-					if (g_peers.count(packet->GetPeer()))
-					{
-						g_peers.erase(packet->GetPeer());
+						g_players.erase(reinterpret_cast<int>(packet->GetPeer()));
 					}
 					//pServer->Disconnect(packet->GetPeer());
 				}
@@ -226,12 +221,11 @@ bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radiu
 	return pos1.distance(pos2) + radius2 <= radius1;
 }
 
-Entity registerPlayer()
+Entity registerPlayer(int id)
 {
 	// Create player
 
-	Entity player(g_idCounter, Vec2(200.0f, 200.0f), 22.0f);
-	g_players[g_idCounter] = player;
-	++g_idCounter;
+	Entity player(id, Vec2(200.0f, 200.0f), 22.0f);
+	g_players[id] = player;
 	return player;
 }
