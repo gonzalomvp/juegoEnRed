@@ -13,6 +13,14 @@
 #define SCR_WIDTH  640
 #define SCR_HEIGHT 480
 
+#define MIN_SPEED       0.5f
+#define MAX_SPEED       2.0f
+#define MIN_RADIUS     22
+#define MAX_RADIUS    122
+#define INIT_PICKUPS   20
+#define MAX_PICKUPS    50
+#define PICKUPS_TIMER 100
+
 using namespace ENet;
 
 void init();
@@ -20,8 +28,9 @@ void update();
 void checkCollisions();
 Entity registerPlayer(int id);
 
-bool checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
-bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
+float calculateSpeed(float radius);
+bool  checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
+bool  checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
 
 
 std::vector<Entity> g_pickups;
@@ -74,7 +83,8 @@ int _tmain(int argc, _TCHAR* argv[])
 							if (g_players.count(msgMove.playerId))
 							{
 								Vec2 dir = msgMove.mousePos - g_players[msgMove.playerId].getPos();
-								g_players[msgMove.playerId].setPos(g_players[msgMove.playerId].getPos() + dir.norm());
+								Vec2 velocity = dir.norm() * calculateSpeed(g_players[msgMove.playerId].getRadius());
+								g_players[msgMove.playerId].setPos(g_players[msgMove.playerId].getPos() + velocity);
 							}
 							
 							break;
@@ -142,7 +152,7 @@ int _tmain(int argc, _TCHAR* argv[])
 void init()
 {
 	srand(timeGetTime());
-	for (size_t i = 0; i < 35; i++)
+	for (size_t i = 0; i < INIT_PICKUPS; i++)
 	{
 		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
 		Entity pickup(g_idCounter++, pos, 5.0f);
@@ -152,13 +162,16 @@ void init()
 
 void update() {
 	++g_timer;
-	if (g_timer >= 100)
+	if (g_timer >= PICKUPS_TIMER)
 	{
 		g_timer = 0;
-		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
-		Entity pickup(g_idCounter++, pos, 5.0f);
-		g_pickups.push_back(pickup);
-		g_pickupsToAdd.push_back(pickup);
+		if (g_pickups.size() < MAX_PICKUPS)
+		{
+			Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
+			Entity pickup(g_idCounter++, pos, 5.0f);
+			g_pickups.push_back(pickup);
+			g_pickupsToAdd.push_back(pickup);
+		}
 	}
 	checkCollisions();
 }
@@ -173,7 +186,7 @@ void checkCollisions() {
 			Entity& p2 = itPlayerNext->second;
 			if (checkAbsorve(p1.getPos(), p1.getRadius(), p2.getPos(), p2.getRadius()))
 			{
-				p1.setRadius(p1.getRadius() + p2.getRadius());
+				p1.setRadius(p1.getRadius() + p2.getRadius() * 0.5f);
 				g_pickupsToRemove.push_back(p2.getId());
 				g_players.erase(itPlayerNext);
 				break;
@@ -228,4 +241,16 @@ Entity registerPlayer(int id)
 	Entity player(id, Vec2(200.0f, 200.0f), 22.0f);
 	g_players[id] = player;
 	return player;
+}
+
+float calculateSpeed(float radius)
+{
+	//clamp and normalize radius
+	if (radius < MIN_RADIUS) radius = MIN_RADIUS;
+	if (radius > MAX_RADIUS) radius = MAX_RADIUS;
+	float normalizedRadius = (radius - MIN_RADIUS) / (MAX_RADIUS - MIN_RADIUS);
+
+	// lerp speed based on normalized radius
+	float speed = normalizedRadius * (MIN_SPEED - MAX_SPEED) + MAX_SPEED;
+	return speed;
 }

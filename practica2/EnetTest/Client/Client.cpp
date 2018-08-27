@@ -115,7 +115,9 @@ int Main(void)
 					}
 				}
 			}
-			
+			else if (packet->GetType() == EPacketType::DISCONNECT) {
+				isAlive = false;
+			}
 			
 		}
 
@@ -146,7 +148,7 @@ int Main(void)
 					player.setRadius(playerToRender.getRadius());
 				}
 				else {
-					CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), texture, 1.0f, rgbamake(0, 255, 0, 255));
+					CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
 				}
 			}
 
@@ -155,7 +157,7 @@ int Main(void)
 				Entity pickup = it->second;
 				CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(10, 10), texture, 1.0f);
 			}
-			CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
+			CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(0, 255, 0, 255));
 		}
 
 
@@ -172,7 +174,7 @@ int Main(void)
 	msgDisconnect.serialize(buffer);
 	//pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, false);
 
-	//pClient->Disconnect(pPeer);
+	pClient->Disconnect(pPeer);
 
 	FONT_End();
 	CORE_EndSound();
