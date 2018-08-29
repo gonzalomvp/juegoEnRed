@@ -1,7 +1,7 @@
 #include "../stdafx.h"
 #include "sys.h"
 
-extern int Main(void);
+extern int Main(LPSTR lpCmdLine);
 
 HINSTANCE WIN_hInst      = 0;
 int       WIN_nCmdShow   = 0;
@@ -134,7 +134,7 @@ int APIENTRY WinMain(HINSTANCE hI, HINSTANCE hPrevI, LPSTR lpCmdLine, int nCS)
   if (SCR_FULLSCREEN) { if (!WIN_SetFullScreen()) return -1; }
   if (!WIN_InitInstance ()) return -1;
   WIN_EnableOpenGL();
-  int retval = Main();
+  int retval = Main(lpCmdLine);
   WIN_DisableOpenGL();
   return retval;
 }

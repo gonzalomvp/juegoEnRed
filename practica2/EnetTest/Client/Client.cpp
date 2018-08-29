@@ -14,7 +14,7 @@ using namespace ENet;
 std::map<int, Entity> g_pickups;
 std::map<int, Entity> g_players;
 
-int Main(void)
+int Main(LPSTR lpCmdLine)
 {
 	CORE_InitSound();
 	FONT_Init();
@@ -39,7 +39,7 @@ int Main(void)
 	CClienteENet* pClient = new CClienteENet();
 	pClient->Init();
 
-	CPeerENet* pPeer = pClient->Connect("127.0.0.1", 1234, 2);
+	CPeerENet* pPeer = pClient->Connect(lpCmdLine, 1234, 2);
 
 	std::vector<CPacketENet*> incommingPackets;
 	pClient->Service(incommingPackets, 0);
@@ -174,7 +174,10 @@ int Main(void)
 	msgDisconnect.serialize(buffer);
 	//pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, false);
 
-	pClient->Disconnect(pPeer);
+	if (pPeer)
+	{
+		pClient->Disconnect(pPeer);
+	}
 
 	FONT_End();
 	CORE_EndSound();
