@@ -4,7 +4,6 @@
 #include "Entity.h"
 #include "PacketENet.h"
 #include "Pickup.h"
-#include "Player.h"
 #include "NetMessage.h"
 #include <Windows.h>
 #include <map>
@@ -12,7 +11,7 @@
 using namespace ENet;
 
 std::map<int, Entity> g_pickups;
-std::map<int, Entity> g_players;
+std::map<int, Player> g_players;
 
 int Main(LPSTR lpCmdLine)
 {
@@ -28,7 +27,7 @@ int Main(LPSTR lpCmdLine)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	Entity player;
+	Player player;
 	bool isAlive = true;
 	bool isConnected = false;
 
@@ -140,7 +139,7 @@ int Main(LPSTR lpCmdLine)
 
 			for (auto it = g_players.begin(); it != g_players.end(); ++it)
 			{
-				Entity playerToRender = it->second;
+				Player playerToRender = it->second;
 				//CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
 				if (playerToRender.getId() == player.getId())
 				{

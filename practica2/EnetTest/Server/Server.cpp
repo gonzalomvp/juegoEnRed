@@ -3,7 +3,6 @@
 #include "Entity.h"
 #include "ServerENet.h"
 #include "Pickup.h"
-#include "Player.h"
 #include "NetMessage.h"
 
 #include <ctime>
@@ -26,7 +25,7 @@ using namespace ENet;
 void init();
 void update();
 void checkCollisions();
-Entity registerPlayer(int id);
+Player registerPlayer(int id);
 
 float calculateSpeed(float radius);
 bool  checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
@@ -35,7 +34,7 @@ bool  checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radi
 
 std::vector<Entity> g_pickups;
 //std::vector<Player> players;
-std::map<int, Entity> g_players;
+std::map<int, Player> g_players;
 //std::map<CPeerENet*, int> g_peers;
 
 std::vector<Entity> g_pickupsToAdd;
@@ -84,7 +83,7 @@ int _tmain(int argc, _TCHAR* argv[])
 							{
 								Vec2 dir = msgMove.mousePos - g_players[msgMove.playerId].getPos();
 								Vec2 velocity = dir.norm() * calculateSpeed(g_players[msgMove.playerId].getRadius());
-								g_players[msgMove.playerId].setPos(g_players[msgMove.playerId].getPos() + velocity);
+								g_players[msgMove.playerId].setPos(Vec2(g_players[msgMove.playerId].getPos()) + velocity);
 							}
 							
 							break;
@@ -130,13 +129,16 @@ int _tmain(int argc, _TCHAR* argv[])
 			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 1, false);
 
 			//Send entities to Add or remove
-			NetMessageAddRemovePickups messagePickups;
-			messagePickups.pickupsToAdd    = g_pickupsToAdd;
-			messagePickups.pickupsToRemove = g_pickupsToRemove;
-			messagePickups.serialize(buffer);
-			pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, true);
-			g_pickupsToAdd.clear();
-			g_pickupsToRemove.clear();
+			if (g_pickupsToAdd.size() > 0 || g_pickupsToRemove.size() > 0)
+			{
+				NetMessageAddRemovePickups messagePickups;
+				messagePickups.pickupsToAdd = g_pickupsToAdd;
+				messagePickups.pickupsToRemove = g_pickupsToRemove;
+				messagePickups.serialize(buffer);
+				pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 0, true);
+				g_pickupsToAdd.clear();
+				g_pickupsToRemove.clear();
+			}
 
 			Sleep(17);
 		}
@@ -155,7 +157,7 @@ void init()
 	for (size_t i = 0; i < INIT_PICKUPS; i++)
 	{
 		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
-		Entity pickup(g_idCounter++, pos, 5.0f);
+		Entity pickup(g_idCounter++, pos);
 		g_pickups.push_back(pickup);
 	}
 }
@@ -168,7 +170,7 @@ void update() {
 		if (g_pickups.size() < MAX_PICKUPS)
 		{
 			Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
-			Entity pickup(g_idCounter++, pos, 5.0f);
+			Entity pickup(g_idCounter++, pos);
 			g_pickups.push_back(pickup);
 			g_pickupsToAdd.push_back(pickup);
 		}
@@ -180,10 +182,10 @@ void checkCollisions() {
 	auto itPlayer = g_players.begin();
 	while (itPlayer != g_players.end())
 	{
-		Entity& p1 = itPlayer->second;
+		Player& p1 = itPlayer->second;
 		for (auto itPlayerNext = std::next(itPlayer); itPlayerNext != g_players.end(); ++itPlayerNext)
 		{
-			Entity& p2 = itPlayerNext->second;
+			Player& p2 = itPlayerNext->second;
 			if (checkAbsorve(p1.getPos(), p1.getRadius(), p2.getPos(), p2.getRadius()))
 			{
 				p1.setRadius(p1.getRadius() + p2.getRadius() * 0.5f);
@@ -203,7 +205,7 @@ void checkCollisions() {
 
 		for (auto itPickup = g_pickups.begin(); itPickup != g_pickups.end(); ++itPickup)
 		{
-			if (checkAbsorve(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), (*itPickup).getRadius()))
+			if (checkAbsorve(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), 5.0f))
 			{
 				p1.setRadius(p1.getRadius() + 2);
 				g_pickupsToRemove.push_back(itPickup->getId());
@@ -234,11 +236,11 @@ bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radiu
 	return pos1.distance(pos2) + radius2 <= radius1;
 }
 
-Entity registerPlayer(int id)
+Player registerPlayer(int id)
 {
 	// Create player
 
-	Entity player(id, Vec2(200.0f, 200.0f), 22.0f);
+	Player player(id, Vec2(200.0f, 200.0f), 22.0f);
 	g_players[id] = player;
 	return player;
 }

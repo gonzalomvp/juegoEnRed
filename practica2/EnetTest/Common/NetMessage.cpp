@@ -1,5 +1,4 @@
 #include "NetMessage.h"
-#include "Player.h"
 
 void NetMessage::serialize(CBuffer& buffer)
 {
@@ -72,7 +71,7 @@ void NetMessagePlayersPositions::deserialize(CBuffer& buffer)
 
 	for (size_t i = 0; i < numPlayers; i++)
 	{
-		Entity player;
+		Player player;
 		buffer.Read(&player, sizeof(player));
 		players[player.getId()] = player;
 	}

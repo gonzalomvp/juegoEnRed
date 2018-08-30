@@ -3,7 +3,6 @@
 #include "Buffer.h"
 #include "Entity.h"
 #include "Pickup.h"
-#include "Player.h"
 #include <map>
 #include <vector>
 
@@ -31,7 +30,7 @@ struct NetMessageStartMatch : public NetMessage
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
 
-	Entity player;
+	Player player;
 
 	int numPickups;
 	std::vector<Entity> pickups;
@@ -55,7 +54,7 @@ struct NetMessagePlayersPositions : public NetMessage
 	virtual void deserialize(CBuffer& buffer);
 
 	int numPlayers;
-	std::map<int, Entity> players;
+	std::map<int, Player> players;
 };
 
 struct NetMessageAddRemovePickups : public NetMessage
