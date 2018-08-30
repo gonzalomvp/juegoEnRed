@@ -128,7 +128,6 @@ int Main(LPSTR lpCmdLine)
 			if (sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT)
 			{
 				NetMessageMoveCommand msgMove;
-				msgMove.playerId = player.getId();
 				msgMove.mousePos = Vec2(sysMousePos.x, sysMousePos.y);
 				buffer.Clear();
 				msgMove.serialize(buffer);

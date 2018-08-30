@@ -80,11 +80,12 @@ int _tmain(int argc, _TCHAR* argv[])
 							buffer.GotoStart();
 							NetMessageMoveCommand msgMove;
 							msgMove.deserialize(buffer);
-							if (g_players.count(msgMove.playerId))
+							int playerId = reinterpret_cast<int>(packet->GetPeer());
+							if (g_players.count(playerId))
 							{
-								Vec2 dir = msgMove.mousePos - g_players[msgMove.playerId].getPos();
-								Vec2 velocity = dir.norm() * calculateSpeed(g_players[msgMove.playerId].getRadius());
-								g_players[msgMove.playerId].setPos(g_players[msgMove.playerId].getPos() + velocity);
+								Vec2 dir = msgMove.mousePos - g_players[playerId].getPos();
+								Vec2 velocity = dir.norm() * calculateSpeed(g_players[playerId].getRadius());
+								g_players[playerId].setPos(g_players[playerId].getPos() + velocity);
 							}
 							
 							break;
