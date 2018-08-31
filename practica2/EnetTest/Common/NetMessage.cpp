@@ -18,9 +18,9 @@ void NetMessageStartMatch::serialize(CBuffer& buffer)
 
 	numPickups = pickups.size();
 	buffer.Write(&numPickups, sizeof(numPickups));
-	for (size_t i = 0; i < numPickups; i++)
+	for (auto it = pickups.begin(); it != pickups.end(); ++it)
 	{
-		buffer.Write(&pickups[i], sizeof(pickups[i]));
+		buffer.Write(&(it->second), sizeof(it->second));
 	}
 
 	numPlayers = players.size();
@@ -42,7 +42,7 @@ void NetMessageStartMatch::deserialize(CBuffer& buffer)
 	{
 		Entity pickup;
 		buffer.Read(&pickup, sizeof(pickup));
-		pickups.push_back(pickup);
+		pickups[pickup.getId()] = pickup;
 	}
 
 	buffer.Read(&numPlayers, sizeof(numPlayers));

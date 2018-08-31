@@ -33,7 +33,7 @@ struct NetMessageStartMatch : public NetMessage
 	int playerId;
 
 	int numPickups;
-	std::vector<Entity> pickups;
+	std::map<int, Entity> pickups;
 
 	int numPlayers;
 	std::map<int, Player> players;

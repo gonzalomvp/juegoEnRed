@@ -32,7 +32,7 @@ bool  checkCircleCircle(const Vec2& pos1, float radius1, const Vec2& pos2, float
 bool  checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2);
 
 
-std::vector<Entity> g_pickups;
+std::map<int, Entity> g_pickups;
 //std::vector<Player> players;
 std::map<int, Player> g_players;
 //std::map<CPeerENet*, int> g_peers;
@@ -153,7 +153,7 @@ void init()
 	{
 		Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
 		Entity pickup(g_idCounter++, pos);
-		g_pickups.push_back(pickup);
+		g_pickups[pickup.getId()] = pickup;
 	}
 }
 
@@ -166,7 +166,7 @@ void update() {
 		{
 			Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
 			Entity pickup(g_idCounter++, pos);
-			g_pickups.push_back(pickup);
+			g_pickups[pickup.getId()] = pickup;
 			g_pickupsToAdd.push_back(pickup);
 		}
 	}
@@ -200,10 +200,11 @@ void checkCollisions() {
 
 		for (auto itPickup = g_pickups.begin(); itPickup != g_pickups.end(); ++itPickup)
 		{
-			if (checkAbsorve(p1.getPos(), p1.getRadius(), (*itPickup).getPos(), 5.0f))
+			Entity& pickup = itPickup->second;
+			if (checkAbsorve(p1.getPos(), p1.getRadius(), pickup.getPos(), 5.0f))
 			{
 				p1.setRadius(p1.getRadius() + 2);
-				g_entitiesToRemove.push_back(itPickup->getId());
+				g_entitiesToRemove.push_back(pickup.getId());
 				g_pickups.erase(itPickup);
 				break;
 			}

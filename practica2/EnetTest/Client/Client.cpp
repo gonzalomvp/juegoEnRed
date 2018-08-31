@@ -67,10 +67,7 @@ int Main(LPSTR lpCmdLine)
 						buffer.GotoStart();
 						message.deserialize(buffer);
 
-						for (size_t i = 0; i < message.numPickups; i++)
-						{
-							g_pickups[message.pickups[i].getId()] = message.pickups[i];
-						}
+						g_pickups = message.pickups;
 						g_players = message.players;
 						player = g_players[message.playerId];
 
