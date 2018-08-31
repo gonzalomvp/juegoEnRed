@@ -20,7 +20,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Entity.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)NetMessage.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Pickup.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Player.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Vec2.h" />
   </ItemGroup>
 </Project>

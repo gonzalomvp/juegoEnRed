@@ -1,5 +1,4 @@
 #include "NetMessage.h"
-#include "Player.h"
 
 void NetMessage::serialize(CBuffer& buffer)
 {
@@ -15,14 +14,20 @@ void NetMessage::deserialize(CBuffer& buffer)
 void NetMessageStartMatch::serialize(CBuffer& buffer)
 {
 	NetMessage::serialize(buffer);
-	buffer.Write(&player, sizeof(player));
+	buffer.Write(&playerId, sizeof(playerId));
 
 	numPickups = pickups.size();
 	buffer.Write(&numPickups, sizeof(numPickups));
-
 	for (size_t i = 0; i < numPickups; i++)
 	{
 		buffer.Write(&pickups[i], sizeof(pickups[i]));
+	}
+
+	numPlayers = players.size();
+	buffer.Write(&numPlayers, sizeof(numPlayers));
+	for (auto it = players.begin(); it != players.end(); ++it)
+	{
+		buffer.Write(&(it->second), sizeof(it->second));
 	}
 }
 
@@ -30,7 +35,7 @@ void NetMessageStartMatch::deserialize(CBuffer& buffer)
 {
 	NetMessage::deserialize(buffer);
 
-	buffer.Read(&player, sizeof(player));
+	buffer.Read(&playerId, sizeof(playerId));
 
 	buffer.Read(&numPickups, sizeof(numPickups));
 	for (size_t i = 0; i < numPickups; i++)
@@ -38,6 +43,14 @@ void NetMessageStartMatch::deserialize(CBuffer& buffer)
 		Entity pickup;
 		buffer.Read(&pickup, sizeof(pickup));
 		pickups.push_back(pickup);
+	}
+
+	buffer.Read(&numPlayers, sizeof(numPlayers));
+	for (size_t i = 0; i < numPlayers; i++)
+	{
+		Player player;
+		buffer.Read(&player, sizeof(player));
+		players[player.getId()] = player;
 	}
 }
 
@@ -72,35 +85,42 @@ void NetMessagePlayersPositions::deserialize(CBuffer& buffer)
 
 	for (size_t i = 0; i < numPlayers; i++)
 	{
-		Entity player;
+		Player player;
 		buffer.Read(&player, sizeof(player));
 		players[player.getId()] = player;
 	}
 }
 
-void NetMessageAddRemovePickups::serialize(CBuffer& buffer)
+void NetMessageAddRemoveEntities::serialize(CBuffer& buffer)
 {
 	NetMessage::serialize(buffer);
+
 	numPickupsToAdd = pickupsToAdd.size();
 	buffer.Write(&numPickupsToAdd, sizeof(numPickupsToAdd));
-
 	for (size_t i = 0; i < numPickupsToAdd; i++)
 	{
 		buffer.Write(&pickupsToAdd[i], sizeof(pickupsToAdd[i]));
 	}
 
-	numPickupsToRemove = pickupsToRemove.size();
-	buffer.Write(&numPickupsToRemove, sizeof(numPickupsToRemove));
-
-	for (size_t i = 0; i < numPickupsToRemove; i++)
+	numPlayersToAdd = playersToAdd.size();
+	buffer.Write(&numPlayersToAdd, sizeof(numPlayersToAdd));
+	for (size_t i = 0; i < numPlayersToAdd; i++)
 	{
-		buffer.Write(&pickupsToRemove[i], sizeof(pickupsToRemove[i]));
+		buffer.Write(&playersToAdd[i], sizeof(playersToAdd[i]));
+	}
+
+	numEntitiesToRemove = entitiesToRemove.size();
+	buffer.Write(&numEntitiesToRemove, sizeof(numEntitiesToRemove));
+	for (size_t i = 0; i < numEntitiesToRemove; i++)
+	{
+		buffer.Write(&entitiesToRemove[i], sizeof(entitiesToRemove[i]));
 	}
 }
 
-void NetMessageAddRemovePickups::deserialize(CBuffer& buffer)
+void NetMessageAddRemoveEntities::deserialize(CBuffer& buffer)
 {
 	NetMessage::deserialize(buffer);
+
 	buffer.Read(&numPickupsToAdd, sizeof(numPickupsToAdd));
 	for (size_t i = 0; i < numPickupsToAdd; i++)
 	{
@@ -109,12 +129,20 @@ void NetMessageAddRemovePickups::deserialize(CBuffer& buffer)
 		pickupsToAdd.push_back(pickup);
 	}
 
-	buffer.Read(&numPickupsToRemove, sizeof(numPickupsToRemove));
-	for (size_t i = 0; i < numPickupsToRemove; i++)
+	buffer.Read(&numPlayersToAdd, sizeof(numPlayersToAdd));
+	for (size_t i = 0; i < numPlayersToAdd; i++)
 	{
-		int pickupId;
-		buffer.Read(&pickupId, sizeof(pickupId));
-		pickupsToRemove.push_back(pickupId);
+		Player player;
+		buffer.Read(&player, sizeof(player));
+		playersToAdd.push_back(player);
+	}
+
+	buffer.Read(&numEntitiesToRemove, sizeof(numEntitiesToRemove));
+	for (size_t i = 0; i < numEntitiesToRemove; i++)
+	{
+		int id;
+		buffer.Read(&id, sizeof(id));
+		entitiesToRemove.push_back(id);
 	}
 }
 

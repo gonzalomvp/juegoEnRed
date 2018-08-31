@@ -3,7 +3,6 @@
 #include "Buffer.h"
 #include "Entity.h"
 #include "Pickup.h"
-#include "Player.h"
 #include <map>
 #include <vector>
 
@@ -13,7 +12,7 @@ enum NetMessageType
 	NETMSG_STARTMATCH,
 	NETMSG_DISCONNECT,
 	NETMSG_PLAYERSPOSITIONS,
-	NETMSG_ADDREMOVEPICKUPS,
+	NETMSG_ADDREMOVEENTITIES,
 	NETMSG_MOVECOMMAND
 };
 
@@ -31,10 +30,13 @@ struct NetMessageStartMatch : public NetMessage
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
 
-	Entity player;
+	int playerId;
 
 	int numPickups;
 	std::vector<Entity> pickups;
+
+	int numPlayers;
+	std::map<int, Player> players;
 };
 
 struct NetMessageDisconnect : public NetMessage
@@ -55,12 +57,12 @@ struct NetMessagePlayersPositions : public NetMessage
 	virtual void deserialize(CBuffer& buffer);
 
 	int numPlayers;
-	std::map<int, Entity> players;
+	std::map<int, Player> players;
 };
 
-struct NetMessageAddRemovePickups : public NetMessage
+struct NetMessageAddRemoveEntities : public NetMessage
 {
-	NetMessageAddRemovePickups() { Type = NETMSG_ADDREMOVEPICKUPS; }
+	NetMessageAddRemoveEntities() { Type = NETMSG_ADDREMOVEENTITIES; }
 
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
@@ -68,8 +70,11 @@ struct NetMessageAddRemovePickups : public NetMessage
 	int numPickupsToAdd;
 	std::vector<Entity> pickupsToAdd;
 
-	int numPickupsToRemove;
-	std::vector<int> pickupsToRemove;
+	int numPlayersToAdd;
+	std::vector<Player> playersToAdd;
+
+	int numEntitiesToRemove;
+	std::vector<int> entitiesToRemove;
 };
 
 struct NetMessageMoveCommand : public NetMessage

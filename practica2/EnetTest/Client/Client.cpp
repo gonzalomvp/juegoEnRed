@@ -4,7 +4,6 @@
 #include "Entity.h"
 #include "PacketENet.h"
 #include "Pickup.h"
-#include "Player.h"
 #include "NetMessage.h"
 #include <Windows.h>
 #include <map>
@@ -12,7 +11,7 @@
 using namespace ENet;
 
 std::map<int, Entity> g_pickups;
-std::map<int, Entity> g_players;
+std::map<int, Player> g_players;
 
 int Main(LPSTR lpCmdLine)
 {
@@ -28,7 +27,7 @@ int Main(LPSTR lpCmdLine)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	Entity player;
+	Player player;
 	bool isAlive = true;
 	bool isConnected = false;
 
@@ -68,12 +67,13 @@ int Main(LPSTR lpCmdLine)
 						buffer.GotoStart();
 						message.deserialize(buffer);
 
-						player = message.player;
-
 						for (size_t i = 0; i < message.numPickups; i++)
 						{
 							g_pickups[message.pickups[i].getId()] = message.pickups[i];
 						}
+						g_players = message.players;
+						player = g_players[message.playerId];
+
 						isConnected = true;
 						break;
 					}
@@ -87,9 +87,9 @@ int Main(LPSTR lpCmdLine)
 						break;
 					}
 					
-					case NETMSG_ADDREMOVEPICKUPS:
+					case NETMSG_ADDREMOVEENTITIES:
 					{
-						NetMessageAddRemovePickups message;
+						NetMessageAddRemoveEntities message;
 						buffer.Write(packet->GetData(), packet->GetDataLength());
 						buffer.GotoStart();
 						message.deserialize(buffer);
@@ -99,15 +99,24 @@ int Main(LPSTR lpCmdLine)
 							g_pickups[message.pickupsToAdd[i].getId()] = message.pickupsToAdd[i];
 						}
 
-						for (size_t i = 0; i < message.numPickupsToRemove; i++)
+						for (size_t i = 0; i < message.numPlayersToAdd; i++)
 						{
-							if (message.pickupsToRemove[i] == player.getId())
+							g_players[message.playersToAdd[i].getId()] = message.playersToAdd[i];
+						}
+
+						for (size_t i = 0; i < message.numEntitiesToRemove; i++)
+						{
+							if (message.entitiesToRemove[i] == player.getId())
 							{
 								isAlive = false;
 							}
-							else
+							else if(g_pickups.count(message.entitiesToRemove[i]) > 0)
 							{
-								g_pickups.erase(message.pickupsToRemove[i]);
+								g_pickups.erase(message.entitiesToRemove[i]);
+							}
+							else if (g_players.count(message.entitiesToRemove[i]) > 0)
+							{
+								g_players.erase(message.entitiesToRemove[i]);
 							}
 						}
 
@@ -137,9 +146,15 @@ int Main(LPSTR lpCmdLine)
 
 			glClear(GL_COLOR_BUFFER_BIT);
 
+			for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)
+			{
+				Entity pickup = it->second;
+				CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(10, 10), texture, 1.0f);
+			}
+
 			for (auto it = g_players.begin(); it != g_players.end(); ++it)
 			{
-				Entity playerToRender = it->second;
+				Player playerToRender = it->second;
 				//CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
 				if (playerToRender.getId() == player.getId())
 				{
@@ -149,12 +164,6 @@ int Main(LPSTR lpCmdLine)
 				else {
 					CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
 				}
-			}
-
-			for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)
-			{
-				Entity pickup = it->second;
-				CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(10, 10), texture, 1.0f);
 			}
 			CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(0, 255, 0, 255));
 		}
