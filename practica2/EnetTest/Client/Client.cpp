@@ -2,10 +2,11 @@
 #include "Buffer.h"
 #include "ClientENet.h"
 #include "Entity.h"
-#include "PacketENet.h"
 #include "NetMessage.h"
-#include <Windows.h>
+#include "PacketENet.h"
+
 #include <map>
+#include <Windows.h>
 
 using namespace ENet;
 
@@ -14,9 +15,9 @@ std::map<int, Player> g_players;
 
 int Main(LPSTR lpCmdLine)
 {
+	// Init engine
 	CORE_InitSound();
 	FONT_Init();
-	//
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT); // Sets up clipping
 	glClearColor(0.0f, 0.1f, 0.3f, 0.0f);
 	glMatrixMode(GL_PROJECTION);
@@ -25,31 +26,27 @@ int Main(LPSTR lpCmdLine)
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GLuint texture = CORE_LoadPNG("data/bubble.png", false);
 	
+	// Init client variables
 	Player player;
-	bool isAlive = true;
 	bool isConnected = false;
 
-	GLuint texture = CORE_LoadPNG("data/bubble.png", false);
-
 	CBuffer buffer(2048);
+	std::vector<CPacketENet*> incommingPackets;
 
+	// Init client and connect with server
 	CClienteENet* pClient = new CClienteENet();
 	pClient->Init();
-
 	CPeerENet* pPeer = pClient->Connect(lpCmdLine, 1234, 2);
 
-	std::vector<CPacketENet*> incommingPackets;
-	pClient->Service(incommingPackets, 0);
-	Sleep(100);
-	//pClient->SendData(pPeer, "pepe", 4, 0, false);
-
-	while (pPeer && !SYS_GottaQuit() && isAlive)
+	// Keep looping checking incoming messages
+	while (!SYS_GottaQuit() && pPeer)
 	{
-		
-		std::vector<CPacketENet*>  incommingPackets;
+		incommingPackets.clear();
 		pClient->Service(incommingPackets, 0);
 		
+		// Process each received message
 		for (size_t i = 0; i < incommingPackets.size(); ++i)
 		{
 			CPacketENet* packet = incommingPackets[i];
@@ -102,7 +99,7 @@ int Main(LPSTR lpCmdLine)
 						{
 							if (message.entitiesToRemove[i] == player.getId())
 							{
-								isAlive = false;
+								pPeer = nullptr;
 								break;
 							}
 							else if(g_pickups.count(message.entitiesToRemove[i]))
@@ -119,13 +116,14 @@ int Main(LPSTR lpCmdLine)
 					}
 				}
 			}
-			else if (packet->GetType() == EPacketType::DISCONNECT) {
-				isAlive = false;
+			else if (packet->GetType() == EPacketType::DISCONNECT)
+			{
+				pPeer = nullptr;
 			}
 			
 		}
 
-		if (isConnected && isAlive)
+		if (isConnected && pPeer)
 		{
 			ivec2 sysMousePos = SYS_MousePos();
 
