@@ -143,7 +143,7 @@ int Main(LPSTR lpCmdLine)
 			
 		}
 
-		if (isConnected && isAlive && pPeer)
+		if (isConnected && isAlive)
 		{
 			// Send the mouse position to the server using a reliable packet
 			ivec2 sysMousePos = SYS_MousePos();
@@ -165,7 +165,7 @@ int Main(LPSTR lpCmdLine)
 			for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)
 			{
 				Entity pickup = it->second;
-				CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(PICKUPS_RADIUS * 2, PICKUPS_RADIUS * 2), texture, 1.0f);
+				CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(PICKUPS_RADIUS * 2.0f, PICKUPS_RADIUS * 2.0f), texture, 1.0f);
 			}
 
 			// Paint players except client player
