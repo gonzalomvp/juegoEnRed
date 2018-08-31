@@ -50,10 +50,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		CBuffer buffer(2048);
 		std::vector<CPacketENet*> incommingPackets;
-
 		// Keep looping checking incoming messages
 		while (true)
 		{
+			incommingPackets.clear();
 			pServer->Service(incommingPackets, 0);
 
 			// Process each received message
