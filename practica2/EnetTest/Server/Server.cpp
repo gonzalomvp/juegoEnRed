@@ -8,8 +8,8 @@
 #include <map>
 #include <Windows.h>
 
-#define SCR_WIDTH     640
-#define SCR_HEIGHT    480
+#define SCR_WIDTH     800
+#define SCR_HEIGHT    600
 #define MIN_SPEED       0.5f
 #define MAX_SPEED       2.0f
 #define MIN_RADIUS     22

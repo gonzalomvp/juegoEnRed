@@ -1,8 +1,8 @@
 #ifndef _SYS_H_
 #define _SYS_H_
 
-#define SCR_WIDTH  640
-#define SCR_HEIGHT 480
+#define SCR_WIDTH  800
+#define SCR_HEIGHT 600
 #define SCR_FULLSCREEN 0
 
 //#############################################################################
