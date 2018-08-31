@@ -179,12 +179,12 @@ int Main(LPSTR lpCmdLine)
 				}
 				else
 				{
-					CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), 1.0f, texture, rgbamake(255, 0, 0, 255));
+					CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), 0.0f, texture, rgbamake(255, 0, 0, 255));
 				}
 			}
 
 			// Paint client player
-			CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), 1.0f, texture, rgbamake(0, 255, 0, 255));
+			CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), 0.0f, texture, rgbamake(0, 255, 0, 255));
 		}
 
 		SYS_Show();
