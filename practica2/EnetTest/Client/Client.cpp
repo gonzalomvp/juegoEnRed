@@ -109,6 +109,7 @@ int Main(LPSTR lpCmdLine)
 							if (message.entitiesToRemove[i] == player.getId())
 							{
 								isAlive = false;
+								break;
 							}
 							else if(g_pickups.count(message.entitiesToRemove[i]) > 0)
 							{
@@ -130,7 +131,7 @@ int Main(LPSTR lpCmdLine)
 			
 		}
 
-		if (isConnected)
+		if (isConnected && isAlive)
 		{
 			ivec2 sysMousePos = SYS_MousePos();
 
