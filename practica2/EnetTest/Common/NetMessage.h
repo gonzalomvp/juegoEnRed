@@ -9,8 +9,7 @@ enum NetMessageType
 {
 	NETMSG_UNKNOWN,
 	NETMSG_STARTMATCH,
-	NETMSG_DISCONNECT,
-	NETMSG_PLAYERSPOSITIONS,
+	NETMSG_WORLDSNAPSHOT,
 	NETMSG_ADDREMOVEENTITIES,
 	NETMSG_MOVECOMMAND
 };
@@ -29,23 +28,31 @@ struct NetMessageStartMatch : public NetMessage
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
 
+	// ID of the new connected client
 	int playerId;
 
-	int numPickups;
+	// Current state of pickups in the world
+	size_t numPickups;
 	std::map<int, Entity> pickups;
 
-	int numPlayers;
+	// Current state of players in the world
+	size_t numPlayers;
 	std::map<int, Player> players;
 };
 
-struct NetMessagePlayersPositions : public NetMessage
+struct NetMessageWorldSnapshot : public NetMessage
 {
-	NetMessagePlayersPositions() { Type = NETMSG_PLAYERSPOSITIONS; }
+	NetMessageWorldSnapshot() { Type = NETMSG_WORLDSNAPSHOT; }
 
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
 
-	int numPlayers;
+	// Current state of pickups in the world
+	size_t numPickups;
+	std::map<int, Entity> pickups;
+
+	// Current state of players in the world
+	size_t numPlayers;
 	std::map<int, Player> players;
 };
 
@@ -56,13 +63,16 @@ struct NetMessageAddRemoveEntities : public NetMessage
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
 
-	int numPickupsToAdd;
+	// Pickups to add
+	size_t numPickupsToAdd;
 	std::vector<Entity> pickupsToAdd;
 
-	int numPlayersToAdd;
+	// Players to add
+	size_t numPlayersToAdd;
 	std::vector<Entity> playersToAdd;
 
-	int numEntitiesToRemove;
+	// Entities to remove
+	size_t numEntitiesToRemove;
 	std::vector<int> entitiesToRemove;
 };
 
@@ -73,5 +83,6 @@ struct NetMessageMoveCommand : public NetMessage
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
 
+	// Mouse position
 	Vec2 mousePos;
 };

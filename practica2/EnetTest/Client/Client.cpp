@@ -63,7 +63,6 @@ int Main(LPSTR lpCmdLine)
 					{
 						NetMessageStartMatch message;
 						buffer.Write(packet->GetData(), packet->GetDataLength());
-						buffer.GotoStart();
 						message.deserialize(buffer);
 
 						g_pickups = message.pickups;
@@ -73,12 +72,12 @@ int Main(LPSTR lpCmdLine)
 						isConnected = true;
 						break;
 					}
-					case NETMSG_PLAYERSPOSITIONS:
+					case NETMSG_WORLDSNAPSHOT:
 					{
-						NetMessagePlayersPositions message;
+						NetMessageWorldSnapshot message;
 						buffer.Write(packet->GetData(), packet->GetDataLength());
-						buffer.GotoStart();
 						message.deserialize(buffer);
+						g_pickups = message.pickups;
 						g_players = message.players;
 						break;
 					}
@@ -87,7 +86,6 @@ int Main(LPSTR lpCmdLine)
 					{
 						NetMessageAddRemoveEntities message;
 						buffer.Write(packet->GetData(), packet->GetDataLength());
-						buffer.GotoStart();
 						message.deserialize(buffer);
 
 						for (size_t i = 0; i < message.numPickupsToAdd; i++)
@@ -107,11 +105,11 @@ int Main(LPSTR lpCmdLine)
 								isAlive = false;
 								break;
 							}
-							else if(g_pickups.count(message.entitiesToRemove[i]) > 0)
+							else if(g_pickups.count(message.entitiesToRemove[i]))
 							{
 								g_pickups.erase(message.entitiesToRemove[i]);
 							}
-							else if (g_players.count(message.entitiesToRemove[i]) > 0)
+							else if (g_players.count(message.entitiesToRemove[i]))
 							{
 								g_players.erase(message.entitiesToRemove[i]);
 							}
