@@ -8,6 +8,9 @@
 #include <map>
 #include <Windows.h>
 
+#define MIN_RADIUS     22
+#define PICKUPS_RADIUS  5.0f
+
 using namespace ENet;
 
 std::map<int, Entity> g_pickups;
@@ -104,7 +107,7 @@ int Main(LPSTR lpCmdLine)
 						// Add new players to the world
 						for (size_t i = 0; i < message.numPlayersToAdd; i++)
 						{
-							g_players[message.playersToAdd[i].getId()] = Player(message.playersToAdd[i].getId(), message.playersToAdd[i].getPos(), 22.0f);
+							g_players[message.playersToAdd[i].getId()] = Player(message.playersToAdd[i].getId(), message.playersToAdd[i].getPos(), MIN_RADIUS);
 						}
 
 						// Remove entities
@@ -144,39 +147,44 @@ int Main(LPSTR lpCmdLine)
 		{
 			// Send the mouse position to the server using a reliable packet
 			ivec2 sysMousePos = SYS_MousePos();
-
-			if (sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT)
+			Vec2 mousePosition = Vec2(static_cast<float>(sysMousePos.x), static_cast<float>(sysMousePos.y));
+			float deltaPosition = (player.getPos() - mousePosition).sqlength();
+			
+			if (deltaPosition > 4.0f && sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT)
 			{
 				NetMessageMoveCommand msgMove;
-				msgMove.mousePos = Vec2(sysMousePos.x, sysMousePos.y);
+				msgMove.mousePos = mousePosition;
 				msgMove.serialize(buffer);
-
 				pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, true);
 			}
 
 			// Paint the entities in screen
 			glClear(GL_COLOR_BUFFER_BIT);
 
+			// Paint pickups
 			for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)
 			{
 				Entity pickup = it->second;
-				CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(10, 10), texture, 1.0f);
+				CORE_RenderCenteredSprite(vmake(pickup.getPos().x, pickup.getPos().y), vmake(PICKUPS_RADIUS * 2, PICKUPS_RADIUS * 2), texture, 1.0f);
 			}
 
+			// Paint players except client player
 			for (auto it = g_players.begin(); it != g_players.end(); ++it)
 			{
 				Player playerToRender = it->second;
-				//CORE_RenderCenteredSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f);
 				if (playerToRender.getId() == player.getId())
 				{
 					player.setPos(playerToRender.getPos());
 					player.setRadius(playerToRender.getRadius());
 				}
-				else {
-					CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), texture, 1.0f, rgbamake(255, 0, 0, 255));
+				else
+				{
+					CORE_RenderCenteredRotatedSprite(vmake(playerToRender.getPos().x, playerToRender.getPos().y), vmake(playerToRender.getRadius() * 2.0f, playerToRender.getRadius() * 2.0f), 1.0f, texture, rgbamake(255, 0, 0, 255));
 				}
 			}
-			CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(0, 255, 0, 255));
+
+			// Paint client player
+			CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), 1.0f, texture, rgbamake(0, 255, 0, 255));
 		}
 
 		SYS_Show();
