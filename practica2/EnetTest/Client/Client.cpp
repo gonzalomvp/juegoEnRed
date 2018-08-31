@@ -101,7 +101,7 @@ int Main(LPSTR lpCmdLine)
 
 						for (size_t i = 0; i < message.numPlayersToAdd; i++)
 						{
-							g_players[message.playersToAdd[i].getId()] = message.playersToAdd[i];
+							g_players[message.playersToAdd[i].getId()] = Player(message.playersToAdd[i].getId(), message.playersToAdd[i].getPos(), 22.0f);
 						}
 
 						for (size_t i = 0; i < message.numEntitiesToRemove; i++)
@@ -176,12 +176,6 @@ int Main(LPSTR lpCmdLine)
 		SYS_Pump();
 		SYS_Sleep(17);
 	}
-
-	NetMessageDisconnect msgDisconnect;
-	msgDisconnect.playerId = player.getId();
-	buffer.Clear();
-	msgDisconnect.serialize(buffer);
-	//pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, false);
 
 	if (pPeer)
 	{

@@ -39,16 +39,6 @@ struct NetMessageStartMatch : public NetMessage
 	std::map<int, Player> players;
 };
 
-struct NetMessageDisconnect : public NetMessage
-{
-	NetMessageDisconnect() { Type = NETMSG_DISCONNECT; }
-
-	virtual void serialize(CBuffer& buffer);
-	virtual void deserialize(CBuffer& buffer);
-
-	int playerId;
-};
-
 struct NetMessagePlayersPositions : public NetMessage
 {
 	NetMessagePlayersPositions() { Type = NETMSG_PLAYERSPOSITIONS; }
@@ -71,7 +61,7 @@ struct NetMessageAddRemoveEntities : public NetMessage
 	std::vector<Entity> pickupsToAdd;
 
 	int numPlayersToAdd;
-	std::vector<Player> playersToAdd;
+	std::vector<Entity> playersToAdd;
 
 	int numEntitiesToRemove;
 	std::vector<int> entitiesToRemove;

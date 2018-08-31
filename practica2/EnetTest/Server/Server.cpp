@@ -38,7 +38,7 @@ std::map<int, Player> g_players;
 //std::map<CPeerENet*, int> g_peers;
 
 std::vector<Entity> g_pickupsToAdd;
-std::vector<Player> g_playersToAdd;
+std::vector<Entity> g_playersToAdd;
 std::vector<int>    g_entitiesToRemove;
 
 int g_idCounter = 0;
@@ -90,25 +90,11 @@ int _tmain(int argc, _TCHAR* argv[])
 							
 							break;
 						}
-							
-						case NETMSG_DISCONNECT:
-						{
-							buffer.Clear();
-							buffer.Write(packet->GetData(), packet->GetDataLength());
-							buffer.GotoStart();
-							NetMessageDisconnect msgDisconnect;
-							msgDisconnect.deserialize(buffer);
-							if (g_players.count(msgDisconnect.playerId))
-							{
-								g_players.erase(msgDisconnect.playerId);
-							}
-							break;
-						}
 					}
 				}
 				else if (packet->GetType() == EPacketType::CONNECT) {
 					Player playerToAdd = registerPlayer(reinterpret_cast<int>(packet->GetPeer()));
-					g_playersToAdd.push_back(playerToAdd);
+					g_playersToAdd.push_back(Entity(playerToAdd.getId(), playerToAdd.getPos()));
 
 					NetMessageStartMatch message;
 					message.playerId = playerToAdd.getId();
@@ -120,6 +106,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				else if (packet->GetType() == EPacketType::DISCONNECT) {
 					if (g_players.count(reinterpret_cast<int>(packet->GetPeer())))
 					{
+						g_entitiesToRemove.push_back(reinterpret_cast<int>(packet->GetPeer()));
 						g_players.erase(reinterpret_cast<int>(packet->GetPeer()));
 					}
 					//pServer->Disconnect(packet->GetPeer());
@@ -247,6 +234,7 @@ bool checkAbsorve(const Vec2& pos1, float radius1, const Vec2& pos2, float radiu
 Player registerPlayer(int id)
 {
 	// Create player
+	//Vec2 pos(rand() % SCR_WIDTH, rand() % SCR_HEIGHT);
 	Vec2 pos(SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f);
 	Player player(id, pos, 22.0f);
 	g_players[id] = player;
