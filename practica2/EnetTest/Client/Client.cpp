@@ -3,7 +3,6 @@
 #include "ClientENet.h"
 #include "Entity.h"
 #include "PacketENet.h"
-#include "Pickup.h"
 #include "NetMessage.h"
 #include <Windows.h>
 #include <map>

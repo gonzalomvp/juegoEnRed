@@ -2,7 +2,6 @@
 #include "Buffer.h"
 #include "Entity.h"
 #include "ServerENet.h"
-#include "Pickup.h"
 #include "NetMessage.h"
 
 #include <ctime>

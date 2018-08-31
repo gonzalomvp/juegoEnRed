@@ -2,7 +2,6 @@
 
 #include "Buffer.h"
 #include "Entity.h"
-#include "Pickup.h"
 #include <map>
 #include <vector>
 

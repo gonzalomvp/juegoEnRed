@@ -6,7 +6,6 @@
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)NetMessage.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Vec2.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Pickup.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Entity.h" />
   </ItemGroup>
 </Project>
