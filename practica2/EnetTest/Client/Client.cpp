@@ -30,6 +30,7 @@ int Main(LPSTR lpCmdLine)
 	
 	// Init client variables
 	Player player;
+	bool isAlive = true;
 	bool isConnected = false;
 
 	CBuffer buffer(2048);
@@ -41,7 +42,7 @@ int Main(LPSTR lpCmdLine)
 	CPeerENet* pPeer = pClient->Connect(lpCmdLine, 1234, 2);
 
 	// Keep looping checking incoming messages
-	while (!SYS_GottaQuit() && pPeer)
+	while (!SYS_GottaQuit() && pPeer && isAlive)
 	{
 		incommingPackets.clear();
 		pClient->Service(incommingPackets, 0);
@@ -51,17 +52,21 @@ int Main(LPSTR lpCmdLine)
 		{
 			CPacketENet* packet = incommingPackets[i];
 			
-			if (packet->GetType() == EPacketType::DATA) {
+			// Data Message
+			if (packet->GetType() == EPacketType::DATA)
+			{
 				NetMessageType type = *reinterpret_cast<NetMessageType*>(packet->GetData());
 				buffer.Clear();
 				switch (type)
 				{
+					// Initial snapshot including client ID from the server
 					case NETMSG_STARTMATCH:
 					{
 						NetMessageStartMatch message;
 						buffer.Write(packet->GetData(), packet->GetDataLength());
 						message.deserialize(buffer);
 
+						// Init entities and self player reference
 						g_pickups = message.pickups;
 						g_players = message.players;
 						player = g_players[message.playerId];
@@ -69,74 +74,87 @@ int Main(LPSTR lpCmdLine)
 						isConnected = true;
 						break;
 					}
+
+					// World snapshot
 					case NETMSG_WORLDSNAPSHOT:
 					{
 						NetMessageWorldSnapshot message;
 						buffer.Write(packet->GetData(), packet->GetDataLength());
 						message.deserialize(buffer);
+
+						// Update world entities
 						g_pickups = message.pickups;
 						g_players = message.players;
 						break;
 					}
 					
+					// Entities update
 					case NETMSG_ADDREMOVEENTITIES:
 					{
 						NetMessageAddRemoveEntities message;
 						buffer.Write(packet->GetData(), packet->GetDataLength());
 						message.deserialize(buffer);
 
+						// Add new pickups to the world
 						for (size_t i = 0; i < message.numPickupsToAdd; i++)
 						{
 							g_pickups[message.pickupsToAdd[i].getId()] = message.pickupsToAdd[i];
 						}
 
+						// Add new players to the world
 						for (size_t i = 0; i < message.numPlayersToAdd; i++)
 						{
 							g_players[message.playersToAdd[i].getId()] = Player(message.playersToAdd[i].getId(), message.playersToAdd[i].getPos(), 22.0f);
 						}
 
+						// Remove entities
 						for (size_t i = 0; i < message.numEntitiesToRemove; i++)
 						{
+							// If the entity to remove is the client player finish game
 							if (message.entitiesToRemove[i] == player.getId())
 							{
-								pPeer = nullptr;
+								isAlive = false;
 								break;
 							}
+							// Check if the entity to remove is a pickup
 							else if(g_pickups.count(message.entitiesToRemove[i]))
 							{
 								g_pickups.erase(message.entitiesToRemove[i]);
 							}
+							// Check if the entity to remove is a player
 							else if (g_players.count(message.entitiesToRemove[i]))
 							{
 								g_players.erase(message.entitiesToRemove[i]);
 							}
 						}
-
 						break;
 					}
 				}
 			}
+
+			// Disconnection Message
 			else if (packet->GetType() == EPacketType::DISCONNECT)
 			{
-				pPeer = nullptr;
+				isAlive = false;
 			}
 			
 		}
 
-		if (isConnected && pPeer)
+		if (isConnected && isAlive && pPeer)
 		{
+			// Send the mouse position to the server using a reliable packet
 			ivec2 sysMousePos = SYS_MousePos();
 
 			if (sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT)
 			{
 				NetMessageMoveCommand msgMove;
 				msgMove.mousePos = Vec2(sysMousePos.x, sysMousePos.y);
-				buffer.Clear();
 				msgMove.serialize(buffer);
 
 				pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, true);
 			}
 
+			// Paint the entities in screen
 			glClear(GL_COLOR_BUFFER_BIT);
 
 			for (auto it = g_pickups.begin(); it != g_pickups.end(); ++it)
@@ -161,14 +179,12 @@ int Main(LPSTR lpCmdLine)
 			CORE_RenderCenteredRotatedSprite(vmake(player.getPos().x, player.getPos().y), vmake(player.getRadius() * 2.0f, player.getRadius() * 2.0f), texture, 1.0f, rgbamake(0, 255, 0, 255));
 		}
 
-
-		
-
 		SYS_Show();
 		SYS_Pump();
 		SYS_Sleep(17);
 	}
 
+	// Send disconnection message
 	if (pPeer)
 	{
 		pClient->Disconnect(pPeer);
