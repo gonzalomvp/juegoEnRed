@@ -5,6 +5,7 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <stdio.h>
+#include <vector>
 
 #define SERVER_PORT 12345
 #define BUF_SIZE 4096
@@ -12,9 +13,6 @@
 
 #define HAVE_STRUCT_TIMESPEC
 #include <pthread.h>
-
-#include <vector>
-
 
 std::vector<SOCKET*> g_clients;
 pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -24,14 +22,16 @@ void sendMessageToClients(const char* message);
 
 int main(int argc, char *argv[])
 {
+	bool error = false;
 	WSADATA wsaData;
 	int wsaerr;
-	SOCKET sockId, socketCliId;
+	SOCKET sockId;
 	int on = 1;
 	struct sockaddr_in addr;
 	struct sockaddr_in client;
 	wsaerr = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (wsaerr != 0) {
+	if (wsaerr != 0)
+	{
 		printf("Could not initialize Winsock.\n");
 		return -1;
 	}
@@ -42,48 +42,68 @@ int main(int argc, char *argv[])
 	addr.sin_port = htons(SERVER_PORT);
 
 	sockId = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sockId < 0) {
+	if (sockId < 0)
+	{
 		printf("Error creating socket\n");
-		WSACleanup();
-		return -1;
+		error = true;
 	}
 	setsockopt(sockId, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
 
-	if (bind(sockId, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+	if (bind(sockId, (struct sockaddr *) &addr, sizeof(addr)) < 0)
+	{
 		printf("Error binding port\n");
-		WSACleanup();
-		return -1;
+		error = true;
 	}
-	if (listen(sockId, QUEUE_SIZE) < 0) {
+	if (listen(sockId, QUEUE_SIZE) < 0)
+	{
 		printf("listen failed\n");
+		error = true;
+	}
+	if (error)
+	{
 		WSACleanup();
 		return -1;
 	}
 
-	while (1) {
+	while (1)
+	{
 		socklen_t sock_len = sizeof(client);
 		memset(&client, 0, sizeof(client));
-		socketCliId = accept(sockId, (struct sockaddr *)&client, &sock_len);
+		SOCKET socketCliId = accept(sockId, (struct sockaddr *)&client, &sock_len);
 		if (socketCliId == INVALID_SOCKET)
 			printf("Can't accept client:%d\n", WSAGetLastError());
-		else {
-			SOCKET* socket = new SOCKET(socketCliId);
-			pthread_t receiveMessagesThread;
-			if (pthread_create(&receiveMessagesThread, NULL, receiveMessages, socket)) {
+		else
+		{
+			SOCKET* socketInThread = new SOCKET(socketCliId);
 
-				fprintf(stderr, "Error creating thread\n");
-				WSACleanup();
-				return 1;
-			}
+			pthread_mutex_lock(&g_mutex);
+			g_clients.push_back(socketInThread);
+			pthread_mutex_unlock(&g_mutex);
+
+			pthread_t receiveMessagesThread;
+			pthread_create(&receiveMessagesThread, NULL, receiveMessages, socketInThread);
 		}
 	}
+
 	closesocket(sockId);
+
+	pthread_mutex_lock(&g_mutex);
+	for (size_t i = 0; i < g_clients.size(); ++i)
+	{
+		closesocket(*g_clients[i]);
+		delete g_clients[i];
+	}
+	g_clients.clear();
+	pthread_mutex_unlock(&g_mutex);
+
 	WSACleanup();
 
     return 0;
 }
 
-void* receiveMessages(void* argument) {
+void* receiveMessages(void* argument)
+{
+	bool connectionError = false;
 	char buf[BUF_SIZE];
 	char messageToSend[BUF_SIZE];
 	char nick[BUF_SIZE];
@@ -94,30 +114,29 @@ void* receiveMessages(void* argument) {
 
 	//receive nick
 	totalRecv = 0;
-	do {
+	do
+	{
 		rec = recv(*socketCliId, buf + totalRecv, BUF_SIZE, 0);
 		totalRecv += rec;
 	} while (rec != -1 && buf[totalRecv - 1] != '\0');
 
-	if (rec == -1) {
-		closesocket(*socketCliId);
-		delete socketCliId;
-		return nullptr;
+	if (rec != -1)
+	{
+		strcpy_s(nick, buf);
+		printf("%s is now connected\n", nick);
+		strcpy_s(messageToSend, nick);
+		strcat_s(messageToSend, " is now connected");
+		sendMessageToClients(messageToSend);
+		
+	}
+	else
+	{
+		connectionError = true;
 	}
 
-	strcpy_s(nick, buf);
-	printf("%s is now connected\n", nick);
-	
-	pthread_mutex_lock(&g_mutex);
-	g_clients.push_back(socketCliId);
-	pthread_mutex_unlock(&g_mutex);
-
-	strcpy_s(messageToSend, nick);
-	strcat_s(messageToSend, " is now connected");
-	sendMessageToClients(messageToSend);
-
 	//keep receiving from client
-	while (socketCliId) {
+	while (*socketCliId != INVALID_SOCKET && !connectionError)
+	{
 		totalRecv = 0;
 		do {
 			rec = recv(*socketCliId, buf + totalRecv, BUF_SIZE, 0);
@@ -134,19 +153,7 @@ void* receiveMessages(void* argument) {
 			sendMessageToClients(messageToSend);
 		}
 		else {
-			pthread_mutex_lock(&g_mutex);
-			for (auto itClients = g_clients.begin(); itClients != g_clients.end(); ++itClients) {
-				if (*itClients == socketCliId) {
-					g_clients.erase(itClients);
-					break;
-				}
-			}
-			pthread_mutex_unlock(&g_mutex);
-			
-			closesocket(*socketCliId);
-			delete socketCliId;
-			socketCliId = nullptr;
-
+			connectionError = true;
 			//mensaje de desconexion
 			printf("%s has been disconnected\n", nick);
 			strcpy_s(messageToSend, nick);
@@ -154,6 +161,14 @@ void* receiveMessages(void* argument) {
 			sendMessageToClients(messageToSend);
 		}
 	}
+
+	pthread_mutex_lock(&g_mutex);
+	auto it = std::find(g_clients.begin(), g_clients.end(), socketCliId);
+	if (it != g_clients.end()) g_clients.erase(it);
+	pthread_mutex_unlock(&g_mutex);
+
+	closesocket(*socketCliId);
+	delete socketCliId;
 
 	return nullptr;
 }
