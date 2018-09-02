@@ -85,16 +85,13 @@ int main(int argc, char *argv[])
 			connectionError = true;
 		}
 
-		//TO-DO open thread to receive messages from server
-		SOCKET* socket = new SOCKET(sockfd);
 		pthread_t receiveMessagesThread;
-		pthread_create(&receiveMessagesThread, NULL, receiveMessages, socket);
+		pthread_create(&receiveMessagesThread, NULL, receiveMessages, &sockfd);
 
 		//keep sending messages
 		while (strcmp(buf, "q") != 0 && !connectionError)
 		{
 			gets_s(buf, _countof(buf));
-
 			if (strcmp(buf, "q") != 0)
 			{
 				length = strlen(buf) + 1;
@@ -123,26 +120,31 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void* receiveMessages(void* argument) {
+void* receiveMessages(void* argument)
+{
 	char buf[BUF_SIZE];
 	SOCKET* sockfd = (SOCKET*)argument;
 
-	while (sockfd) {
+	while (*sockfd != INVALID_SOCKET)
+	{
 		int rec = 0;
 		int totalRecv = 0;
 		do {
 			rec = recv(*sockfd, buf + totalRecv, BUF_SIZE, 0);
 			totalRecv += rec;
 		} while (rec != -1 && buf[totalRecv - 1] != '\0');
-		if (rec != -1) {
+
+		if (rec != -1)
+		{
 			printf("%s\n", buf);
 		}
-		else {
+		else
+		{
 			closesocket(*sockfd);
-			delete sockfd;
-			sockfd = nullptr;
+			WSACleanup();
+			exit(-1);
 		}
-		
+
 	}
 	
 	return nullptr;
