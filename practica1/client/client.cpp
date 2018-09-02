@@ -85,6 +85,7 @@ int main(int argc, char *argv[])
 			connectionError = true;
 		}
 
+		//create thread to receive messages
 		pthread_t receiveMessagesThread;
 		pthread_create(&receiveMessagesThread, NULL, receiveMessages, &sockfd);
 
@@ -123,14 +124,14 @@ int main(int argc, char *argv[])
 void* receiveMessages(void* argument)
 {
 	char buf[BUF_SIZE];
-	SOCKET* sockfd = (SOCKET*)argument;
+	SOCKET sockfd = *(SOCKET*)argument;
 
-	while (*sockfd != INVALID_SOCKET)
+	while (sockfd != INVALID_SOCKET)
 	{
 		int rec = 0;
 		int totalRecv = 0;
 		do {
-			rec = recv(*sockfd, buf + totalRecv, BUF_SIZE, 0);
+			rec = recv(sockfd, buf + totalRecv, BUF_SIZE, 0);
 			totalRecv += rec;
 		} while (rec != -1 && buf[totalRecv - 1] != '\0');
 
@@ -140,7 +141,7 @@ void* receiveMessages(void* argument)
 		}
 		else
 		{
-			closesocket(*sockfd);
+			closesocket(sockfd);
 			WSACleanup();
 			exit(-1);
 		}
