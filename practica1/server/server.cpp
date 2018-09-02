@@ -47,14 +47,17 @@ int main(int argc, char *argv[])
 		printf("Error creating socket\n");
 		error = true;
 	}
-	setsockopt(sockId, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
-
-	if (bind(sockId, (struct sockaddr *) &addr, sizeof(addr)) < 0)
+	else
+	{
+		setsockopt(sockId, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
+	}
+	
+	if (!error && bind(sockId, (struct sockaddr *) &addr, sizeof(addr)) < 0)
 	{
 		printf("Error binding port\n");
 		error = true;
 	}
-	if (listen(sockId, QUEUE_SIZE) < 0)
+	if (!error && listen(sockId, QUEUE_SIZE) < 0)
 	{
 		printf("listen failed\n");
 		error = true;
@@ -65,6 +68,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	//keep accepting client connections
 	while (1)
 	{
 		socklen_t sock_len = sizeof(client);
@@ -72,6 +76,8 @@ int main(int argc, char *argv[])
 		SOCKET socketCliId = accept(sockId, (struct sockaddr *)&client, &sock_len);
 		if (socketCliId == INVALID_SOCKET)
 			printf("Can't accept client:%d\n", WSAGetLastError());
+		
+		//create a thread to handle messages received from the client
 		else
 		{
 			SOCKET* socketInThread = new SOCKET(socketCliId);
@@ -85,8 +91,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	//close server socket
 	closesocket(sockId);
 
+	//close all client sockets from list and release resources
 	pthread_mutex_lock(&g_mutex);
 	for (size_t i = 0; i < g_clients.size(); ++i)
 	{
@@ -97,7 +105,6 @@ int main(int argc, char *argv[])
 	pthread_mutex_unlock(&g_mutex);
 
 	WSACleanup();
-
     return 0;
 }
 
@@ -127,7 +134,6 @@ void* receiveMessages(void* argument)
 		strcpy_s(messageToSend, nick);
 		strcat_s(messageToSend, " is now connected");
 		sendMessageToClients(messageToSend);
-		
 	}
 	else
 	{
@@ -138,35 +144,37 @@ void* receiveMessages(void* argument)
 	while (*socketCliId != INVALID_SOCKET && !connectionError)
 	{
 		totalRecv = 0;
-		do {
+		do
+		{
 			rec = recv(*socketCliId, buf + totalRecv, BUF_SIZE, 0);
 			totalRecv += rec;
 		} while (rec != -1 && buf[totalRecv - 1] != '\0');
 
-		if (rec != -1) {
-			printf("%s> %s\n", nick, buf);
+		//message to resend to all clients
+		if (rec != -1)
+		{
 			strcpy_s(messageToSend, nick);
 			strcat_s(messageToSend, "> ");
 			strcat_s(messageToSend, buf);
-
-			//Resend received message
-			sendMessageToClients(messageToSend);
 		}
-		else {
+		//disconnection message
+		else
+		{
 			connectionError = true;
-			//mensaje de desconexion
-			printf("%s has been disconnected\n", nick);
 			strcpy_s(messageToSend, nick);
 			strcat_s(messageToSend, " has been disconnected");
-			sendMessageToClients(messageToSend);
 		}
+		printf("%s\n", messageToSend);
+		sendMessageToClients(messageToSend);
 	}
 
+	//remove socket from list
 	pthread_mutex_lock(&g_mutex);
 	auto it = std::find(g_clients.begin(), g_clients.end(), socketCliId);
 	if (it != g_clients.end()) g_clients.erase(it);
 	pthread_mutex_unlock(&g_mutex);
 
+	//close socket and release resources
 	closesocket(*socketCliId);
 	delete socketCliId;
 
@@ -174,10 +182,10 @@ void* receiveMessages(void* argument)
 }
 
 void sendMessageToClients(const char* message) {
-	std::vector<SOCKET*> clientsToRemove;
 	int length = strlen(message) + 1;
+
 	pthread_mutex_lock(&g_mutex);
-	for (size_t i = 0; i < g_clients.size(); i++)
+	for (size_t i = 0; i < g_clients.size(); ++i)
 	{
 		int numBytesSend, totalSend = 0;
 		do
@@ -185,23 +193,6 @@ void sendMessageToClients(const char* message) {
 			numBytesSend = send(*g_clients[i], message, length - totalSend, 0);
 			totalSend += numBytesSend;
 		} while (numBytesSend != -1 && totalSend < length);
-
-		if (numBytesSend == -1) {
-			clientsToRemove.push_back(g_clients[i]);
-		}
-
-	}
-
-	//Hacer mas limpio
-	for (size_t i = 0; i < clientsToRemove.size(); i++)
-	{
-		SOCKET* clientToRemove = clientsToRemove[i];
-		for (auto itClients = g_clients.begin(); itClients != g_clients.end(); ++itClients) {
-			if (*itClients == clientToRemove) {
-				g_clients.erase(itClients);
-				break;
-			}
-		}
 	}
 	pthread_mutex_unlock(&g_mutex);
 }
