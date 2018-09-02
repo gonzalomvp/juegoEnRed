@@ -11,15 +11,16 @@
 #define HAVE_STRUCT_TIMESPEC
 #include <pthread.h>
 
-using namespace std;
-
 #define SERVER_PORT "12345"
 #define BUF_SIZE 4096
+
+using namespace std;
 
 void* receiveMessages(void* argument);
 
 int main(int argc, char *argv[])
 {
+	bool connectionError = false;
 	WSADATA wsaData;
 	int wsaerr;
 	SOCKET sockfd;
@@ -41,19 +42,21 @@ int main(int argc, char *argv[])
 	hints.ai_protocol = IPPROTO_TCP;
 	// Busca las addrinfo del host al que nos queremos conectar
 	int error = getaddrinfo(argv[1], SERVER_PORT, &hints, &servInfo);
-
 	if (error != 0)
 	{
 		printf("getaddrinfo failed");
 		WSACleanup();
 		return -1;
 	}
+
 	for (srvaddr = servInfo; (srvaddr != NULL); srvaddr = srvaddr->ai_next)
 	{
 		sockfd = socket(srvaddr->ai_family, srvaddr->ai_socktype, srvaddr->ai_protocol);
-		if (sockfd != INVALID_SOCKET) {
+		if (sockfd != INVALID_SOCKET)
+		{
 			int iResult = connect(sockfd, srvaddr->ai_addr, (int)srvaddr->ai_addrlen);
-			if (iResult == SOCKET_ERROR) {
+			if (iResult == SOCKET_ERROR)
+			{
 				closesocket(sockfd);
 				sockfd = INVALID_SOCKET;
 			}
@@ -79,31 +82,21 @@ int main(int argc, char *argv[])
 
 		if (numBytesSend == -1)
 		{
-			closesocket(sockfd);
-			printf("Server has been disconnected\n");
-			gets_s(buf, _countof(buf));
-			WSACleanup();
-			return 1;
+			connectionError = true;
 		}
 
 		//TO-DO open thread to receive messages from server
 		SOCKET* socket = new SOCKET(sockfd);
 		pthread_t receiveMessagesThread;
-		if (pthread_create(&receiveMessagesThread, NULL, receiveMessages, socket)) {
-			closesocket(sockfd);
-			closesocket(*socket);
-			delete socket;
-			fprintf(stderr, "Error creating thread\n");
-			WSACleanup();
-			return 1;
-		}
-
+		pthread_create(&receiveMessagesThread, NULL, receiveMessages, socket);
 
 		//keep sending messages
-		while (strcmp(buf, "q") != 0) {
+		while (strcmp(buf, "q") != 0 && !connectionError)
+		{
 			gets_s(buf, _countof(buf));
 
-			if (strcmp(buf, "q") != 0) {
+			if (strcmp(buf, "q") != 0)
+			{
 				length = strlen(buf) + 1;
 				numBytesSend, totalSend = 0;
 				do
@@ -112,21 +105,22 @@ int main(int argc, char *argv[])
 					totalSend += numBytesSend;
 				} while (numBytesSend != -1 && totalSend < length);
 
-				if (numBytesSend == -1) {
-					closesocket(sockfd);
-					printf("Server has been disconnected\n");
-					gets_s(buf, _countof(buf));
-					WSACleanup();
-					return 1;
+				if (numBytesSend == -1)
+				{
+					connectionError = true;
 				}
 			}
 		}
-
-		closesocket(sockfd);
 	}
+	closesocket(sockfd);
 	WSACleanup();
 
-    return 0;
+	if (connectionError) {
+		printf("Server has been disconnected, press Enter to exit\n");
+		gets_s(buf, _countof(buf));
+	}
+
+	return 0;
 }
 
 void* receiveMessages(void* argument) {
