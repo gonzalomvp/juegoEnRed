@@ -141,7 +141,7 @@ void* receiveMessages(void* argument)
 	}
 
 	//keep receiving from client
-	while (*socketCliId != INVALID_SOCKET && !connectionError)
+	while (!connectionError)
 	{
 		totalRecv = 0;
 		do
@@ -181,7 +181,8 @@ void* receiveMessages(void* argument)
 	return nullptr;
 }
 
-void sendMessageToClients(const char* message) {
+void sendMessageToClients(const char* message)
+{
 	int length = strlen(message) + 1;
 
 	pthread_mutex_lock(&g_mutex);
