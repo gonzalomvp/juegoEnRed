@@ -84,11 +84,13 @@ int main(int argc, char *argv[])
 		{
 			connectionError = true;
 		}
-
-		//create thread to receive messages
-		pthread_t receiveMessagesThread;
-		pthread_create(&receiveMessagesThread, NULL, receiveMessages, &sockfd);
-
+		else
+		{
+			//create thread to receive messages
+			pthread_t receiveMessagesThread;
+			pthread_create(&receiveMessagesThread, NULL, receiveMessages, &sockfd);
+		}
+		
 		//keep sending messages
 		while (strcmp(buf, "q") != 0 && !connectionError)
 		{
@@ -109,15 +111,14 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
+		if (connectionError)
+		{
+			printf("Server has been disconnected, press Enter to exit\n");
+			gets_s(buf, _countof(buf));
+		}
+		closesocket(sockfd);
 	}
-	closesocket(sockfd);
 	WSACleanup();
-
-	if (connectionError) {
-		printf("Server has been disconnected, press Enter to exit\n");
-		gets_s(buf, _countof(buf));
-	}
-
 	return 0;
 }
 
@@ -130,7 +131,8 @@ void* receiveMessages(void* argument)
 	{
 		int rec = 0;
 		int totalRecv = 0;
-		do {
+		do
+		{
 			rec = recv(sockfd, buf + totalRecv, BUF_SIZE, 0);
 			totalRecv += rec;
 		} while (rec != -1 && buf[totalRecv - 1] != '\0');
@@ -142,11 +144,11 @@ void* receiveMessages(void* argument)
 		else
 		{
 			closesocket(sockfd);
-			WSACleanup();
-			exit(-1);
+			sockfd = INVALID_SOCKET;
 		}
-
 	}
+	WSACleanup();
+	exit(-1);
 	
 	return nullptr;
 }
