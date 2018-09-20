@@ -101,7 +101,7 @@ int Main(LPSTR lpCmdLine)
 						// Update world entities
 						g_pickups = message.pickups;
 						g_players = message.players;
-						if (isConnected)
+						if (isConnected && g_players.count(player.getId()))
 						{
 							player = g_players[player.getId()];
 						}
