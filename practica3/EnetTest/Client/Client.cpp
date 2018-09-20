@@ -17,6 +17,7 @@
 #define MAX_PICKUPS    50
 #define PICKUPS_TIMER 100
 #define PICKUPS_RADIUS  5.0f
+#define PACKETS_DELAY   0.0f
 
 using namespace ENet;
 
@@ -173,7 +174,7 @@ int Main(LPSTR lpCmdLine)
 			player.setPos(player.getPos() + velocity);
 			g_players[player.getId()] = player;
 			
-			if (deltaPosition > 4.0f && sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT && accumulatedTime >= 50.0f)
+			if (deltaPosition > 4.0f && sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT && accumulatedTime >= PACKETS_DELAY)
 			{
 				beginTime = clock();
 				accumulatedTime = 0.0f;

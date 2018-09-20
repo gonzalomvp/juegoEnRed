@@ -18,6 +18,7 @@
 #define MAX_PICKUPS    50
 #define PICKUPS_TIMER 100
 #define PICKUPS_RADIUS  5.0f
+#define PACKETS_DELAY 50000.0f
 
 using namespace ENet;
 
@@ -125,8 +126,9 @@ int _tmain(int argc, _TCHAR* argv[])
 			// Create new entities and check collisions
 			update();
 
-			if (accumulatedTime >= 50.0f)
+			if (accumulatedTime >= PACKETS_DELAY)
 			{
+				printf("SNAPSHOT SENT");
 				beginTime = clock();
 				accumulatedTime = 0.0f;
 				//Send new world snapshot to all clients using a NOT reliable packet
