@@ -18,7 +18,8 @@
 #define MAX_PICKUPS    50
 #define PICKUPS_TIMER 100
 #define PICKUPS_RADIUS  5.0f
-#define PACKETS_DELAY   0.0f
+#define LATENCY_BASE    0.0f
+#define PACKETS_SEC     5.0f
 
 using namespace ENet;
 
@@ -47,7 +48,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	// Init Server
 	CServerENet* pServer = new CServerENet();
-	if (pServer->Init(1234, 5, 0, 0, 500, 0, 0))
+	if (pServer->Init(1234, 5, 0, 0, LATENCY_BASE, 0, 0))
 	{
 		clock_t beginTime = clock();
 		float accumulatedTime = 0.0f;
@@ -129,13 +130,12 @@ int _tmain(int argc, _TCHAR* argv[])
 			// Create new entities and check collisions
 			update();
 
-			if (accumulatedTime >= PACKETS_DELAY)
+			if (accumulatedTime >= (1000.0f / PACKETS_SEC))
 			{
 				printf("SNAPSHOT SENT");
 				accumulatedTime = 0.0f;
 				//Send new world snapshot to all clients using a NOT reliable packet
 				NetMessageWorldSnapshot messageWorldSnapshot;
-				messageWorldSnapshot.pickups = g_pickups;
 				messageWorldSnapshot.players = g_players;
 				messageWorldSnapshot.serialize(buffer);
 				pServer->SendAll(buffer.GetBytes(), buffer.GetSize(), 1, false);

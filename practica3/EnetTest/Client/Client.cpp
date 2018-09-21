@@ -18,7 +18,8 @@
 #define PICKUPS_TIMER 100
 #define PICKUPS_RADIUS  5.0f
 #define PACKETS_DELAY   0.0f
-#define LOCAL_SIM       0
+#define LOCAL_SIM       1
+#define DEAD_RECKONING  1
 
 using namespace ENet;
 
@@ -26,6 +27,7 @@ float calculateSpeed(float radius);
 
 std::map<int, Entity> g_pickups;
 std::map<int, Player> g_players;
+std::map<int, Player> g_playersInServer;
 
 int Main(LPSTR lpCmdLine)
 {
@@ -87,6 +89,7 @@ int Main(LPSTR lpCmdLine)
 						// Init entities and self player reference
 						g_pickups = message.pickups;
 						g_players = message.players;
+						g_playersInServer = message.players;
 						player = g_players[message.playerId];
 
 						isConnected = true;
@@ -101,12 +104,11 @@ int Main(LPSTR lpCmdLine)
 						message.deserialize(buffer);
 
 						// Update world entities
-						//g_pickups = message.pickups;
-						g_players = message.players;
-						if (isConnected && g_players.count(player.getId()))
+						g_playersInServer = message.players;
+						/*if (isConnected && g_players.count(player.getId()))
 						{
 							player = g_players[player.getId()];
-						}
+						}*/
 						break;
 					}
 					
@@ -147,6 +149,7 @@ int Main(LPSTR lpCmdLine)
 							else if (g_players.count(message.entitiesToRemove[i]))
 							{
 								g_players.erase(message.entitiesToRemove[i]);
+								g_playersInServer.erase(message.entitiesToRemove[i]);
 							}
 						}
 						break;
@@ -169,25 +172,64 @@ int Main(LPSTR lpCmdLine)
 			Vec2 mousePosition = Vec2(static_cast<float>(sysMousePos.x), static_cast<float>(sysMousePos.y));
 			float deltaPosition = (player.getPos() - mousePosition).sqlength();
 
-			if (LOCAL_SIM)
+			if (deltaPosition > 4.0f && sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT)
 			{
-				// Simulate local movement
-				Vec2 dir = mousePosition - player.getPos();
-				Vec2 velocity = dir.norm() * calculateSpeed(player.getRadius());
-				player.setPos(player.getPos() + velocity);
-				g_players[player.getId()] = player;
-			}
-			
-			if (deltaPosition > 4.0f && sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT && accumulatedTime >= PACKETS_DELAY)
-			{
-				beginTime = clock();
-				accumulatedTime = 0.0f;
+				if (accumulatedTime >= PACKETS_DELAY)
+				{
+					beginTime = clock();
+					accumulatedTime = 0.0f;
 
-				NetMessageMoveCommand msgMove;
-				msgMove.mousePos = mousePosition;
-				msgMove.serialize(buffer);
-				pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, true);
+					NetMessageMoveCommand msgMove;
+					msgMove.mousePos = mousePosition;
+					msgMove.serialize(buffer);
+					pClient->SendData(pPeer, buffer.GetBytes(), buffer.GetSize(), 0, true);
+				}
+
+				// Simulate local movement
+				if (LOCAL_SIM)
+				{
+					Vec2 dir = mousePosition - player.getPos();
+					Vec2 velocity = dir.norm() * calculateSpeed(player.getRadius());
+					player.setPos(player.getPos() + velocity);
+					g_playersInServer[player.getId()].setPos(player.getPos());
+				}
 			}
+
+			// Dead Reckoning
+			if (DEAD_RECKONING)
+			{
+				for (auto it = g_playersInServer.begin(); it != g_playersInServer.end(); ++it)
+				{
+					Player playerInServer = it->second;
+					if (g_players.count(playerInServer.getId()))
+					{
+						g_players[playerInServer.getId()].setRadius(playerInServer.getRadius());
+						Vec2 localPos = g_players[playerInServer.getId()].getPos();
+						Vec2 serverPos = playerInServer.getPos();
+						Vec2 dir = serverPos - localPos;
+						deltaPosition = dir.sqlength();
+						float speed = calculateSpeed(playerInServer.getRadius());
+						if (deltaPosition <= speed)
+						{
+							g_players[playerInServer.getId()].setPos(playerInServer.getPos());
+						}
+						else
+						{
+							Vec2 velocity = dir.norm() * speed;
+							g_players[playerInServer.getId()].setPos(localPos + velocity);
+						}
+					}
+					else
+					{
+						g_players[playerInServer.getId()] = playerInServer;
+					}
+				}
+			}
+			else
+			{
+				g_players = g_playersInServer;
+			}
+			player = g_players[player.getId()];
 
 			// Paint the entities in screen
 			glClear(GL_COLOR_BUFFER_BIT);

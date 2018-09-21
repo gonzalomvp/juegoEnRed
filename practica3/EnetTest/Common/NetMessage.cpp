@@ -59,13 +59,6 @@ void NetMessageWorldSnapshot::serialize(CBuffer& buffer)
 {
 	NetMessage::serialize(buffer);
 
-	numPickups = pickups.size();
-	buffer.Write(&numPickups, sizeof(numPickups));
-	for (auto it = pickups.begin(); it != pickups.end(); ++it)
-	{
-		buffer.Write(&(it->second), sizeof(it->second));
-	}
-
 	numPlayers = players.size();
 	buffer.Write(&numPlayers, sizeof(numPlayers));
 	for (auto it = players.begin(); it != players.end(); ++it)
@@ -77,14 +70,6 @@ void NetMessageWorldSnapshot::serialize(CBuffer& buffer)
 void NetMessageWorldSnapshot::deserialize(CBuffer& buffer)
 {
 	NetMessage::deserialize(buffer);
-
-	buffer.Read(&numPickups, sizeof(numPickups));
-	for (size_t i = 0; i < numPickups; i++)
-	{
-		Entity pickup;
-		buffer.Read(&pickup, sizeof(pickup));
-		pickups[pickup.getId()] = pickup;
-	}
 
 	buffer.Read(&numPlayers, sizeof(numPlayers));
 	for (size_t i = 0; i < numPlayers; i++)

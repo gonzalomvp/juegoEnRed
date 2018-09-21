@@ -47,10 +47,6 @@ struct NetMessageWorldSnapshot : public NetMessage
 	virtual void serialize(CBuffer& buffer);
 	virtual void deserialize(CBuffer& buffer);
 
-	// Current state of pickups in the world
-	size_t numPickups;
-	std::map<int, Entity> pickups;
-
 	// Current state of players in the world
 	size_t numPlayers;
 	std::map<int, Player> players;
