@@ -16,7 +16,7 @@
 #define MAX_RADIUS    122
 #define INIT_PICKUPS   20
 #define MAX_PICKUPS    50
-#define PICKUPS_TIMER 100
+#define PICKUPS_TIMER  60
 #define PICKUPS_RADIUS  5.0f
 #define LATENCY_BASE    0.0f
 #define PACKETS_SEC     5.0f
