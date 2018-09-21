@@ -18,6 +18,7 @@
 #define PICKUPS_TIMER 100
 #define PICKUPS_RADIUS  5.0f
 #define PACKETS_DELAY   0.0f
+#define LOCAL_SIM       0
 
 using namespace ENet;
 
@@ -100,7 +101,7 @@ int Main(LPSTR lpCmdLine)
 						message.deserialize(buffer);
 
 						// Update world entities
-						g_pickups = message.pickups;
+						//g_pickups = message.pickups;
 						g_players = message.players;
 						if (isConnected && g_players.count(player.getId()))
 						{
@@ -168,11 +169,14 @@ int Main(LPSTR lpCmdLine)
 			Vec2 mousePosition = Vec2(static_cast<float>(sysMousePos.x), static_cast<float>(sysMousePos.y));
 			float deltaPosition = (player.getPos() - mousePosition).sqlength();
 
-			// Simulate local movement
-			Vec2 dir = mousePosition - player.getPos();
-			Vec2 velocity = dir.norm() * calculateSpeed(player.getRadius());
-			player.setPos(player.getPos() + velocity);
-			g_players[player.getId()] = player;
+			if (LOCAL_SIM)
+			{
+				// Simulate local movement
+				Vec2 dir = mousePosition - player.getPos();
+				Vec2 velocity = dir.norm() * calculateSpeed(player.getRadius());
+				player.setPos(player.getPos() + velocity);
+				g_players[player.getId()] = player;
+			}
 			
 			if (deltaPosition > 4.0f && sysMousePos.x > 0 && sysMousePos.x <= SCR_WIDTH && sysMousePos.y > 0 && sysMousePos.y <= SCR_HEIGHT && accumulatedTime >= PACKETS_DELAY)
 			{
