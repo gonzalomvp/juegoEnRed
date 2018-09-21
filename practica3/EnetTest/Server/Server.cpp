@@ -18,7 +18,7 @@
 #define MAX_PICKUPS    50
 #define PICKUPS_TIMER 100
 #define PICKUPS_RADIUS  5.0f
-#define PACKETS_DELAY 50000.0f
+#define PACKETS_DELAY   0.0f
 
 using namespace ENet;
 
@@ -47,7 +47,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	// Init Server
 	CServerENet* pServer = new CServerENet();
-	if (pServer->Init(1234, 5))
+	if (pServer->Init(1234, 5, 0, 0, 500, 0, 0))
 	{
 		clock_t beginTime = clock();
 		float accumulatedTime = 0.0f;
@@ -57,10 +57,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		// Keep looping checking incoming messages
 		while (true)
 		{
-			accumulatedTime += static_cast<float>(clock() - beginTime);
-			//printf("accumulatedTime: %f\n", accumulatedTime);
+			clock_t endTime = clock();
+			float deltaTime = static_cast<float>(endTime - beginTime);
+			beginTime = endTime;
+			accumulatedTime += deltaTime;
+
 			incommingPackets.clear();
-			pServer->Service(incommingPackets, 0);
+			pServer->Service(incommingPackets, deltaTime);
 
 			// Process each received message
 			for (size_t i = 0; i < incommingPackets.size(); ++i)
@@ -129,7 +132,6 @@ int _tmain(int argc, _TCHAR* argv[])
 			if (accumulatedTime >= PACKETS_DELAY)
 			{
 				printf("SNAPSHOT SENT");
-				beginTime = clock();
 				accumulatedTime = 0.0f;
 				//Send new world snapshot to all clients using a NOT reliable packet
 				NetMessageWorldSnapshot messageWorldSnapshot;
