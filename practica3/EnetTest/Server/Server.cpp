@@ -18,7 +18,7 @@
 #define MAX_PICKUPS    50
 #define PICKUPS_TIMER  60
 #define PICKUPS_RADIUS  5.0f
-#define LATENCY_BASE    0.0f
+#define LATENCY_BASE   50.0f
 #define PACKETS_SEC     5.0f
 
 using namespace ENet;
@@ -132,7 +132,6 @@ int _tmain(int argc, _TCHAR* argv[])
 
 			if (accumulatedTime >= (1000.0f / PACKETS_SEC))
 			{
-				printf("SNAPSHOT SENT");
 				accumulatedTime = 0.0f;
 				//Send new world snapshot to all clients using a NOT reliable packet
 				NetMessageWorldSnapshot messageWorldSnapshot;
