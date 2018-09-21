@@ -153,7 +153,8 @@ void CServerENet::SendAll(void* data, size_t longData, int channel, bool reliabl
     for(std::vector<CPeerENet*>::iterator iter = m_PeerList.begin(); iter != m_PeerList.end(); ++iter)
     {
         CPeerENet* pConexion = (CPeerENet*)*iter;
-        enet_peer_send (pConexion->GetENetPeer(), channel, packet);
+        //enet_peer_send (pConexion->GetENetPeer(), channel, packet);
+		pConexion->SendPacket(packet, channel);
     }
 
     if (DEBUG_ENET)

@@ -67,7 +67,8 @@ void CHostENet::SendData(CPeerENet* pPeer, void* data, int longData, int channel
 
     ENetPacket * packet = enet_packet_create (data, longData, rel);
 
-    enet_peer_send(pPeer->GetENetPeer(), channel, packet);
+    //enet_peer_send(pPeer->GetENetPeer(), channel, packet);
+	pPeer->SendPacket(packet, channel);
 
     if (DEBUG_ENET)
         fprintf (stdout, "Packet send ");
